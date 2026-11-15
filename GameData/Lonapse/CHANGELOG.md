@@ -8,11 +8,9 @@ Lonapse hits 1.0! Your kerbals now talk through the big moments of a flight, fro
 
 - **Mission moments.** Mission Control and the crew now talk on the launch pad, right after liftoff, when you reach a stable orbit, when the last stage runs low on fuel, when the entry heat starts to build and when you're back home after a trip to space. Each one has plenty of versions, so you won't hear the same exchange every flight.
 
-- **Probe crash.** When your probe crashes, Mission Control notices. You can switch it off with "A crashed probe" in the events list.
+- **Probe crash.** When your probe crashes, Mission Control notices.
 
 - **Action group voicelines.** Click the antenna button on the toolbar in the VAB or SPH to give a craft its own lines for Abort, Gear, Lights, Brakes, RCS, SAS and Custom 1 to 10. Per line you pick who says it and if it goes over the radio or the intercom. Mission Control can reply too. Type your lines in English and Lonapse turns them into rough Spanish for the voice. The lines are saved in the craft. A craft you never set up uses the built-in lines for Abort, Gear and Lights.
-
-- **Probe beeps for action groups.** A probe has no kerbal to say a voiceline, so the same window has a Probe beeps tab. It works like the voicelines. Every action group has its own list of beeps and one of them is picked at random. Per beep you pick the mood, the words of its subtitle, like "[beeps gear down]", and for Gear, Lights, Brakes, RCS and SAS if it is for on, off or both. Mission Control can reply to a beep, with a reply you type or a standard one. Preview plays the beep of the probe core on your craft. A probe you never set up beeps for Abort, Gear and Lights.
 
 - **Probes in a blackout.** A probe in a reentry blackout beeps to itself through the plasma, nervous or about the heat. When it comes out, Mission Control finds it again and it beeps back.
 
