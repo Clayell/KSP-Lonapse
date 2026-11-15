@@ -1,0 +1,1159 @@
+english	spanish
+# English to Spanish, for the action group voicelines a player types in English. The voice says the Spanish, as loñapsE.	
+# A row is one word or a few words in lower case. The longest match wins. A word that is not here is said as typed.	
+# Words: translated one by one, so the word order stays English. Plurals, -ing and -ed of a listed word are worked out.	
+get out of here	salid de aquí
+get out of there	salid de ahí
+getting out of here	saliendo de aquí
+i am going to	voy a
+we are going to	vamos a
+here we go	allá vamos
+i'm going to	voy a
+reaction control system	sistema de control de reacción
+we have to	tenemos que
+we need to	tenemos que
+we're going to	vamos a
+a lot	mucho
+abort sequence	secuencia de aborto
+action group	grupo de acción
+air brakes	aerofrenos
+all right	muy bien
+all systems	todos los sistemas
+an emergency	una emergencia
+are closed	están cerrados
+are off	están apagadas
+are on	están encendidas
+are open	están abiertos
+are out	están apagadas
+are ready	están listos
+at all	para nada
+at last	por fin
+cargo bay	bahía de carga
+coming down	bajando
+coming up	subiendo
+do not	no
+docking port	puerto de acoplamiento
+drogue chutes	paracaídas de frenado
+escape system	sistema de escape
+escape tower	torre de escape
+external lights	luces exteriores
+free to	libres para
+fuel cell	célula de combustible
+fuel cells	células de combustible
+full power	potencia máxima
+full throttle	potencia máxima
+get out	salid
+go for	listos para
+going down	bajando
+going to	yendo a
+going up	subiendo
+good job	buen trabajo
+good luck	buena suerte
+ground control	Control de Tierra
+hang on	aguantad
+heat shield	escudo térmico
+hold on	aguantad
+i am	estoy
+i can	puedo
+i have	tengo
+i hope	espero que
+i need	necesito
+i think	creo que
+i will	voy a
+in the	en el
+is closed	está cerrado
+is go	está listo
+is off	está apagado
+is on	está encendido
+is open	está abierto
+is ready	está listo
+it is	es
+landing gear	tren de aterrizaje
+landing legs	patas de aterrizaje
+let me	déjame
+let's go	vamos
+lets go	vamos
+lift off	despegue
+lights off	luces apagadas
+lights on	luces encendidas
+main engine	motor principal
+main engines	motores principales
+mission control	Control de Misión
+no problem	sin problema
+of course	claro
+of the	del
+on a	en un
+on board	a bordo
+on course	en rumbo
+on my	en mi
+on our	en nuestro
+on the	en el
+on track	en rumbo
+out of	fuera de
+power up	encendiendo
+powering up	encendiendo
+reaction wheels	ruedas de reacción
+ready for	listos para
+ready to	listos para
+right now	ahora mismo
+science lab	laboratorio de ciencia
+shut down	apagado
+shutting down	apagando
+solar panel	panel solar
+solar panels	paneles solares
+stand by	en espera
+standing by	en espera
+take off	despegue
+thank you	gracias
+the antenna	la antena
+the antennas	las antenas
+the boosters	los propulsores
+the brakes	los frenos
+the capsule	la cápsula
+the chutes	los paracaídas
+the crew	la tripulación
+the door	la puerta
+the doors	las puertas
+the engines	los motores
+the fairings	las cofias
+the hatch	la escotilla
+the ladder	la escalera
+the legs	las patas
+the lights	las luces
+the mission	la misión
+the panels	los paneles
+the parachutes	los paracaídas
+the probe	la sonda
+the sequence	la secuencia
+the ship	la nave
+the station	la estación
+the surface	la superficie
+the systems	los sistemas
+the tanks	los tanques
+the thrusters	los propulsores
+the wheels	las ruedas
+there are	hay
+there is	hay
+they are	están
+throttle down	reduciendo potencia
+throttle up	acelerando
+time to	hora de
+to the	al
+touch down	aterrizaje
+we are	estamos
+we can	podemos
+we got	tenemos
+we have	tenemos
+we need	necesitamos
+we will	vamos a
+well done	bien hecho
+what is	qué es
+you are	estás
+a	un
+abort	abortar
+aborted	abortado
+aborting	abortando
+about	sobre
+above	sobre
+acceleration	aceleración
+acceptable	aceptable
+accepted	aceptado
+accidents	accidentes
+according	según
+accounting	contabilidad
+acknowledged	recibido
+activate	activar
+activated	activado
+activating	activando
+active	activo
+actual	real
+address	dirección
+adventure	aventura
+affirmative	afirmativo
+after	después
+again	otra vez
+ago	hace
+agreement	acuerdo
+ah	ah
+air	aire
+airbrakes	aerofrenos
+alarm	alarma
+album	álbum
+alignment	alineación
+all	todo
+almost	casi
+already	ya
+also	también
+altitude	altitud
+always	siempre
+am	estoy
+amazing	increíble
+an	un
+analysis	análisis
+and	y
+animal	animal
+another	otro
+antenna	antena
+antennas	antenas
+any	algún
+anyone	alguien
+apoapsis	apoapsis
+applied	aplicado
+apply	aplicar
+applying	aplicando
+approach	aproximación
+archive	archivo
+are	están
+aren't	no están
+arm	armar
+armed	armado
+arming	armando
+arms	brazos
+around	alrededor
+arrival	llegada
+arrow	flecha
+as	como
+ascent	ascenso
+assistance	asistencia
+asteroid	asteroide
+at	en
+atmosphere	atmósfera
+attempt	intento
+attention	atención
+attitude	actitud
+away	lejos
+baby	bebé
+back	atrás
+bad	malo
+badly	mal
+bag	bolsa
+barometer	barómetro
+battery	batería
+bay	bahía
+be	estar
+because	porque
+been	estado
+before	antes
+begin	comenzar
+beginning	comenzando
+being	siendo
+belt	cinturón
+better	mejor
+between	entre
+big	grande
+bird	pájaro
+birthday	cumpleaños
+bit	poco
+blackout	apagón
+blue	azul
+board	panel
+boat	barco
+body	cuerpo
+bolt	tornillo
+book	libro
+boom	boom
+booster	propulsor
+boosters	propulsores
+boss	jefe
+both	ambos
+boy	chico
+brake	freno
+brakes	frenos
+braking	frenando
+brave	valiente
+bravo	bravo
+breakfast	desayuno
+breathable	respirable
+brilliant	brillante
+brochure	folleto
+brought	traído
+bug	bicho
+bump	golpe
+burn	encendido
+burning	quemando
+but	pero
+button	botón
+buttons	botones
+by	por
+bye	adiós
+cabin	cabina
+cafeteria	cafetería
+cake	tarta
+calendar	calendario
+calibrated	calibrado
+camera	cámara
+can	podemos
+can't	no puedo
+cannot	no puedo
+capsule	cápsula
+captain	capitán
+capture	captura
+car	coche
+careful	cuidado
+cargo	carga
+caution	precaución
+ceiling	techo
+chair	silla
+character	carácter
+charge	carga
+check	comprobar
+checked	comprobado
+checking	comprobando
+cheer	ánimo
+cheese	queso
+chute	paracaídas
+chutes	paracaídas
+clear	despejado
+click	clic
+client	cliente
+climbing	subiendo
+clock	reloj
+close	cerrar
+closed	cerrado
+closing	cerrando
+cloud	nube
+coffee	café
+cold	frío
+colleague	compañero
+collect	recoger
+collecting	recogiendo
+color	color
+come	venir
+comet	cometa
+coming	viniendo
+command	orden
+commander	comandante
+complete	completado
+completed	completado
+computer	ordenador
+configuration	configuración
+confirm	confirmar
+confirmed	confirmado
+confirming	confirmando
+congrats	enhorabuena
+congratulations	felicidades
+connection	conexión
+contact	contacto
+contract	contrato
+contracts	contratos
+control	control
+cookies	galletas
+cooking	cocinando
+copy	recibido
+correction	corrección
+costs	cuesta
+could	podría
+couldn't	no podía
+crew	tripulación
+crumbs	migas
+cube	cubo
+curve	curva
+cut	cortar
+cutoff	corte
+danger	peligro
+dangerous	peligroso
+data	datos
+day	día
+days	días
+deactivate	desactivar
+deactivated	desactivado
+deactivating	desactivando
+decouple	desacoplar
+decoupled	desacoplado
+decoupling	desacoplando
+degree	grado
+degrees	grados
+department	departamento
+deploy	desplegar
+deployed	desplegado
+deploying	desplegando
+deployment	despliegue
+descending	bajando
+descent	descenso
+deserves	merece
+desk	mesa
+dessert	postre
+destination	destino
+details	detalles
+diary	diario
+did	hizo
+didn't	no
+director	director
+dirt	tierra
+disable	desactivar
+disabled	desactivado
+disabling	desactivando
+discount	descuento
+discovery	descubrimiento
+disengage	desactivar
+disengaged	desactivado
+disengaging	desactivando
+dish	antena
+do	hacer
+dock	acoplar
+docked	acoplado
+docking	acoplamiento
+does	hace
+doesn't	no
+doing	haciendo
+don't	no
+done	hecho
+door	puerta
+doors	puertas
+dots	puntos
+double	doble
+down	abajo
+drawing	dibujo
+drill	taladro
+drills	taladros
+drive	conducir
+driving	conduciendo
+drone	dron
+duck	pato
+dust	polvo
+dynamic	dinámica
+each	cada
+easy	tranquilo
+efficient	eficiente
+eight	ocho
+eject	expulsar
+ejected	expulsado
+ejecting	expulsando
+electricity	electricidad
+elegant	elegante
+emergency	emergencia
+empty	vacío
+enable	activar
+enabled	activado
+enabling	activando
+encounter	encuentro
+engage	activar
+engaged	activado
+engaging	activando
+engine	motor
+engines	motores
+equatorial	ecuatorial
+error	error
+escape	escapar
+escaping	escapando
+every	cada
+everybody	todos
+everyone	todos
+everything	todo
+everything's	todo está
+example	ejemplo
+execute	ejecutar
+executed	ejecutado
+executing	ejecutando
+experience	experiencia
+experiment	experimento
+experiments	experimentos
+extend	extender
+extended	extendido
+extending	extendiendo
+exterior	exterior
+external	exterior
+face	cara
+failure	fallo
+fairing	cofia
+fairings	cofias
+fall	caer
+falling	cayendo
+fascinating	fascinante
+fast	rápido
+few	pocos
+fewer	menos
+field	campo
+fine	bien
+finger	dedo
+finished	terminado
+fire	fuego
+fired	disparado
+firing	disparando
+first	primero
+five	cinco
+flag	bandera
+flameout	apagado
+flaps	flaps
+flashlight	linterna
+flight	vuelo
+floor	suelo
+fly	volar
+flying	volando
+folder	carpeta
+folks	gente
+following	siguiendo
+food	comida
+footprint	huella
+footrest	reposapiés
+for	para
+formation	formación
+forward	adelante
+found	encontrado
+four	cuatro
+fragile	frágil
+free	libre
+freezer	congelador
+friend	amigo
+from	de
+fuel	combustible
+full	completo
+funds	fondos
+galaxy	galaxia
+gear	tren
+get	conseguir
+getting	consiguiendo
+giant	gigante
+give	dar
+glove	guante
+gloves	guantes
+go	vamos
+going	yendo
+gold	oro
+gone	ido
+goo	moco
+good	bueno
+goodbye	adiós
+got	tenemos
+grandpa	abuelo
+gravitational	gravitatoria
+gravity	gravedad
+great	genial
+green	verde
+gross	asqueroso
+ground	suelo
+guys	chicos
+had	tenía
+handful	puñado
+handwriting	letra
+hang	aguanta
+happening	pasa
+harvest	cosecha
+has	tiene
+hasn't	no ha
+hatch	escotilla
+have	tenemos
+haven't	no hemos
+he	él
+he's	él está
+headrest	reposacabezas
+heard	oído
+heat	calor
+height	altura
+hello	hola
+helmet	casco
+help	ayuda
+her	su
+here	aquí
+here's	aquí está
+hey	oye
+hi	hola
+hiccups	hipo
+high	alto
+his	su
+history	historia
+hold	mantener
+holding	manteniendo
+holds	aguanta
+home	casa
+hop	salto
+hope	espero
+hopefully	ojalá
+horizon	horizonte
+hot	caliente
+hour	hora
+hours	horas
+house	casa
+how	cómo
+hug	abrazo
+huge	enorme
+hull	casco
+hundred	cien
+hurry	rápido
+hypothesis	hipótesis
+i	yo
+i'd	yo
+i'll	voy a
+i'm	estoy
+i've	he
+ice	hielo
+if	si
+ignite	encender
+ignition	ignición
+ignore	ignorar
+illumination	iluminación
+image	imagen
+important	importante
+in	en
+inclination	inclinación
+initiate	iniciar
+initiated	iniciado
+initiating	iniciando
+inside	dentro
+instant	instantáneo
+interesting	interesante
+intern	becario
+internal	interior
+into	en
+inventory	inventario
+invisible	invisible
+ion	iónico
+is	está
+isn't	no es
+it	eso
+it'll	va a
+it's	es
+its	su
+jar	bote
+jettison	expulsar
+jettisoned	expulsado
+jettisoning	expulsando
+jewel	joya
+job	trabajo
+just	solo
+kerbal	kerbal
+kids	niños
+kill	apagar
+kilopascals	kilopascales
+know	sé
+lab	laboratorio
+label	etiqueta
+ladder	escalera
+land	aterrizar
+landed	aterrizado
+lander	módulo de aterrizaje
+landing	aterrizaje
+lap	vuelta
+last	último
+launch	lanzamiento
+launchpad	plataforma
+layers	capas
+leave	salir
+leaving	saliendo
+left	izquierda
+leg	pata
+legs	patas
+less	menos
+let	dejar
+liftoff	despegue
+light	luz
+lights	luces
+like	gusta
+line	línea
+link	enlace
+list	lista
+lit	encendido
+little	poco
+load	carga
+local	local
+lock	bloquear
+locked	bloqueado
+long	largo
+look	mira
+losing	perdiendo
+lost	perdido
+lot	mucho
+low	bajo
+lower	bajar
+lowered	bajado
+lowering	bajando
+luck	suerte
+luxury	lujo
+magnet	imán
+magnetometer	magnetómetro
+main	principal
+mains	principales
+make	hacer
+maker	cafetera
+makes	hace
+making	haciendo
+maneuver	maniobra
+maneuvering	maniobra
+manual	manual
+many	muchos
+map	mapa
+marker	marcador
+materials	materiales
+may	puede
+maybe	quizá
+me	me
+meeting	reunión
+message	mensaje
+meters	metros
+might	quizá
+minus	menos
+minute	minuto
+minutes	minutos
+mission	misión
+missions	misiones
+mode	modo
+moment	momento
+moon	luna
+more	más
+motion	movimiento
+mountain	montaña
+move	mover
+movement	movimiento
+moving	moviendo
+much	mucho
+mug	taza
+museum	museo
+music	música
+must	debe
+mustard	mostaza
+my	mi
+mystery	misterio
+name	nombre
+nap	siesta
+navigation	navegación
+nearly	casi
+need	necesitamos
+needs	necesita
+negative	negativo
+nerves	nervios
+never	nunca
+new	nuevo
+next	siguiente
+nice	bien
+nicely	bien
+nine	nueve
+no	no
+nobody	nadie
+nobody's	nadie está
+node	nodo
+noise	ruido
+nominal	nominal
+none	ninguno
+nope	no
+normal	normal
+normally	normalmente
+not	no
+notes	notas
+nothing	nada
+now	ahora
+number	número
+nut	tuerca
+observation	observación
+observer	observador
+of	de
+off	desactivado
+office	oficina
+official	oficial
+officially	oficialmente
+offline	fuera de línea
+oh	oh
+ok	vale
+okay	vale
+old	viejo
+on	activado
+one	uno
+onion	cebolla
+online	en línea
+only	solo
+onto	sobre
+oops	uy
+open	abierto
+opened	abierto
+opening	abriendo
+operation	operación
+operations	operaciones
+or	o
+orange	naranja
+orbit	órbita
+orbital	orbital
+order	orden
+original	original
+other	otro
+ouch	ay
+our	nuestro
+out	fuera
+outside	fuera
+oven	horno
+over	cambio
+oxygen	oxígeno
+pack	mochila
+package	paquete
+pad	plataforma
+page	página
+paint	pintura
+panel	panel
+panels	paneles
+paperwork	papeleo
+parachute	paracaídas
+parts	piezas
+path	trayectoria
+patience	paciencia
+payload	carga útil
+pebble	piedrita
+pen	bolígrafo
+pencil	lápiz
+people	gente
+per	por
+perfectly	perfectamente
+periapsis	periapsis
+permission	permiso
+photo	foto
+photos	fotos
+pile	montón
+pilot	piloto
+pizza	pizza
+place	sitio
+plan	plan
+plane	avión
+planet	planeta
+plasma	plasma
+please	por favor
+plop	plop
+pocket	bolsillo
+pod	cápsula
+poetic	poético
+points	puntos
+port	puerto
+pouches	bolsitas
+power	energía
+precision	precisión
+prepare	preparar
+prepared	preparado
+preparing	preparando
+pressure	presión
+price	precio
+primary	principal
+priority	prioridad
+probe	sonda
+problem	problema
+procedure	procedimiento
+profile	perfil
+propulsion	propulsión
+pull	tirar
+push	empujar
+put	poner
+question	pregunta
+quick	rápido
+radiator	radiador
+radiators	radiadores
+radio	radio
+raining	llueve
+raise	subir
+raised	subido
+raising	subiendo
+rations	raciones
+reaction	reacción
+reading	lectura
+ready	listo
+really	de verdad
+receiving	recibiendo
+record	registro
+recorded	registrado
+recovery	rescate
+red	rojo
+reduce	reducir
+reference	referencia
+reflection	reflejo
+reheated	recalentada
+release	soltar
+released	liberado
+releasing	soltando
+report	informe
+reputation	reputación
+requested	pedido
+reserve	reserva
+respect	respeto
+response	respuesta
+retract	recoger
+retracted	recogido
+retracting	recogiendo
+right	correcto
+ring	anillo
+rocket	cohete
+rockets	cohetes
+roger	recibido
+roll	rodar
+rolling	rodando
+romantic	romántico
+route	ruta
+rover	róver
+rubber	goma
+rudder	timón
+run	correr
+running	funcionando
+sad	triste
+safe	seguro
+same	mismo
+sample	muestra
+satellite	satélite
+save	salvar
+says	dice
+scanner	escáner
+science	ciencia
+screen	pantalla
+screw	tornillo
+seat	asiento
+seatbelt	cinturón
+seatbelts	cinturones
+second	segundo
+secondary	secundario
+section	sección
+see	veo
+seems	parece
+seen	visto
+seismic	sísmico
+seismometer	sismómetro
+selfish	egoísta
+sensor	sensor
+separate	separar
+separated	separado
+separating	separando
+separation	separación
+sequence	secuencia
+set	fijar
+seven	siete
+several	varios
+shadow	sombra
+shape	forma
+she	ella
+she's	ella está
+shield	escudo
+ship	nave
+short	corto
+should	debería
+shouldn't	no debería
+signal	señal
+silence	silencio
+sir	señor
+situation	situación
+six	seis
+sketch	boceto
+sky	cielo
+slow	lento
+slowing	frenando
+slowly	despacio
+small	pequeño
+smudge	mancha
+snow	nieve
+so	así
+sock	calcetín
+sofa	sofá
+some	algo de
+somebody	alguien
+someone	alguien
+something	algo
+song	canción
+soon	pronto
+sorry	perdón
+sounds	suena
+soup	sopa
+source	fuente
+south	sur
+space	espacio
+spacecraft	nave
+spaceplane	avión espacial
+special	especial
+speed	velocidad
+spin	giro
+splashdown	amerizaje
+spot	sitio
+stability	estabilidad
+stabilize	estabilizar
+stabilizing	estabilizando
+stable	estable
+stage	etapa
+stages	etapas
+staging	separación
+standby	en espera
+standing	esperando
+star	estrella
+stars	estrellas
+start	iniciar
+started	iniciado
+starting	iniciando
+station	estación
+status	estado
+stay	quedarse
+steady	estable
+step	paso
+stew	guiso
+stomach	estómago
+stop	parar
+stopped	parado
+stopping	parando
+strong	fuerte
+structure	estructura
+strut	puntal
+struts	puntales
+study	estudio
+style	estilo
+suborbital	suborbital
+successful	exitoso
+suit	traje
+summary	resumen
+sun	sol
+sunrise	amanecer
+surface	superficie
+suspicious	sospechoso
+sweating	sudando
+sweep	barrido
+swimming	nadando
+switch	cambiar
+switched	cambiado
+switching	cambiando
+system	sistema
+systems	sistemas
+take	tomar
+takeoff	despegue
+taking	tomando
+tank	tanque
+tanks	tanques
+tape	cinta
+target	objetivo
+task	tarea
+tea	té
+team	equipo
+technically	técnicamente
+telemetry	telemetría
+telescope	telescopio
+temperature	temperatura
+ten	diez
+terrain	terreno
+than	que
+thank	gracias
+thanks	gracias
+that	eso
+that's	eso es
+the	el
+their	su
+them	ellos
+then	entonces
+theory	teoría
+there	ahí
+there's	hay
+thermometer	termómetro
+these	estos
+they	ellos
+they'll	van a
+they're	están
+things	cosas
+think	creo
+third	tercero
+this	esto
+those	esos
+thousand	mil
+three	tres
+throttle	acelerador
+through	por
+thrust	empuje
+thruster	propulsor
+thrusters	propulsores
+times	veces
+tiredness	cansancio
+to	a
+today	hoy
+together	juntos
+toggle	alternar
+toggled	alternado
+tomorrow	mañana
+too	también
+total	total
+touchdown	aterrizaje
+toward	hacia
+tower	torre
+tracking	seguimiento
+train	tren
+trajectory	trayectoria
+transmit	transmitir
+transmitting	transmitiendo
+tremble	temblor
+trick	truco
+trip	viaje
+trouble	problemas
+try	intentar
+trying	intentando
+tube	tubo
+turn	girar
+turned	girado
+turning	girando
+twenty	veinte
+twins	gemelas
+two	dos
+uh	eh
+um	eh
+under	bajo
+understood	entendido
+undock	desacoplar
+undocked	desacoplado
+undocking	desacoplando
+unlock	desbloquear
+unlocked	desbloqueado
+until	hasta
+up	arriba
+update	actualización
+updated	actualizado
+upgraded	mejorado
+us	nos
+use	usar
+used	usado
+useful	útil
+using	usando
+vacuum	vacío
+very	muy
+veteran	veterano
+vibration	vibración
+voice	voz
+volcano	volcán
+wait	esperar
+waiting	esperando
+wall	pared
+want	queremos
+wants	quiere
+warning	aviso
+was	estaba
+wasn't	no era
+watch	mira
+water	agua
+we	nosotros
+we'd	nosotros
+we'll	vamos a
+we're	estamos
+we've	hemos
+week	semana
+well	bien
+were	estaban
+weren't	no estaban
+what	qué
+what's	qué es
+wheel	rueda
+wheels	ruedas
+when	cuando
+where	dónde
+who	quién
+who's	quién es
+whoa	guau
+why	por qué
+wilco	recibido
+will	va a
+window	ventana
+wing	ala
+wings	alas
+with	con
+without	sin
+witness	testigo
+won	ganado
+won't	no va a
+word	palabra
+words	palabras
+work	trabajo
+works	funciona
+worrying	preocupante
+worth	vale
+would	sería
+wouldn't	no sería
+wow	guau
+yeah	sí
+yep	sí
+yes	sí
+yesterday	ayer
+you	tú
+you'll	vas a
+you're	estás
+you've	has
+your	tu
+zero	cero

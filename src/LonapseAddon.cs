@@ -9,7 +9,7 @@ namespace Lonapse
     [KSPAddon(KSPAddon.Startup.Flight, false)]
     public class LonapseAddon : MonoBehaviour
     {
-        public const string Version = "0.9.0";
+        public const string Version = "1.0.0";
 
         // gate reasons (constant strings, no per-frame allocation)
         public const string GateOpenReason = "open";
@@ -24,7 +24,7 @@ namespace Lonapse
         private readonly FlightSampler sampler = new FlightSampler();
 
         public VoiceChannel[] crew = new VoiceChannel[0];
-        public VoiceChannel control, controlBed, staticCh;
+        public VoiceChannel control, controlBed, staticCh, blackoutBedCh, blackoutBurstCh;
         public VoiceChannel crewBed;   // static loop under crew radio lines (radioStatic)
         public VoiceChannel[] beep = new VoiceChannel[0];
         public VoiceChannel[] allChannels = new VoiceChannel[0];
@@ -55,6 +55,9 @@ namespace Lonapse
         public float gameGain = 1f;
         private Vessel lastVessel;
         private Vessel destroyedVessel;   // gate stays closed for this vessel, even within the same frame
+        private float activePartDiedAt = -100f;   // Time.unscaledTime a part of the active vessel blew up: a crash, not a recovery
+        /// <summary>A destroyed probe counts as crashed when one of its parts blew up within this many s.</summary>
+        private const float CrashPartWindow = 2f;
         private string silenceReason = "";  // gate reason at the last hard silence (warp end gets a ping)
 
         public bool stationMode;          // active vessel type is Station or Base
@@ -186,14 +189,13 @@ namespace Lonapse
         public VoiceChannel airlockCh;    // airlock on dock and undock, apart from sfxCh so a later effect does not cut it off
         private float alarmHoldLeft;
 
-        /// <summary>Extra answer delay far from Kerbin: lightDelayScale * log10(1 + km / 10000), capped.</summary>
+        /// <summary>Extra answer delay of Mission Control far from Kerbin, see DcMath.LightDelay.</summary>
         public float LightDelay
         {
             get
             {
                 if (!settings.lightDelay) return 0f;
-                Tuning tu = settings.tuning;
-                return (float)Math.Min(tu.lightDelayMax, tu.lightDelayScale * Math.Log10(1.0 + signal.homeKm / 10000.0));
+                return DcMath.LightDelay(signal.homeKm, settings.tuning.lightDelayMax);
             }
         }
 
@@ -291,8 +293,10 @@ namespace Lonapse
                 CreateChannels();
                 Tuning tu0 = settings.tuning;
                 throttle = new ThrottleWatch(tu0.throttleFullAt, tu0.throttleCutAt, 0.5f, 0.3f, tu0.throttleMinGap, 0.5f);
-                roster.genderPitchFemale = tu0.genderPitchFemale;
-                roster.genderPitchMale = tu0.genderPitchMale;
+                // Keep the per-Kerbal voice spread at the original gender baselines. The mixer factor is
+                // applied after the pitch safety floor, so lowering a slider stays audible.
+                roster.genderPitchFemale = DcMath.GenderPitchFemale;
+                roster.genderPitchMale = DcMath.GenderPitchMale;
                 roster.personalityEffects = settings.personalityEffects;
                 director = new ChatterDirector(this, rng);
                 beeps = new BeepDirector(this, rng);
@@ -362,6 +366,8 @@ namespace Lonapse
             for (int i = 0; i < 2; i++)
                 beep[i] = new VoiceChannel(t, "beep" + i, ChannelKind.Beep, 100, 250f, 6000f, 0.08f, false);
             staticCh = new VoiceChannel(t, "static", ChannelKind.Static, 100, 200f, 5000f, 0.4f, false);
+            blackoutBedCh = new VoiceChannel(t, "blackoutBed", ChannelKind.Sfx, 101, 200f, 5000f, 0.4f, false);
+            blackoutBurstCh = new VoiceChannel(t, "blackoutBurst", ChannelKind.Sfx, 101, 200f, 5000f, 0.4f, false);
             crewBed = new VoiceChannel(t, "crewBed", ChannelKind.Static, 100, 300f, 3500f, 0.2f, false);
             // dedicated intercom click source, so a click is never skipped when crew channels are busy
             clickCh = new VoiceChannel(t, "intercomClick", ChannelKind.IntercomClick, 90, 150f, 9000f, 0f, false);
@@ -378,7 +384,7 @@ namespace Lonapse
             cabinDownCh = new VoiceChannel(t, "cabinPowerDown", ChannelKind.Sfx, 115, 10f, 22000f, 0f, false);
             cabinRattleCh = new VoiceChannel(t, "cabinRattle", ChannelKind.Sfx, 115, 10f, 22000f, 0f, false);
             cabinSeparationCh = new VoiceChannel(t, "cabinSeparation", ChannelKind.Sfx, 94, 10f, 22000f, 0f, false);
-            allChannels = new VoiceChannel[] { crew[0], crew[1], crew[2], control, controlBed, beep[0], beep[1], staticCh, crewBed, clickCh, calloutCh, keyCh, breathCh, alarmCh, sfxCh, airlockCh, thrustCh, groundCh, stepCh, cabinCh, cabinDownCh, cabinRattleCh, cabinSeparationCh };
+            allChannels = new VoiceChannel[] { crew[0], crew[1], crew[2], control, controlBed, beep[0], beep[1], staticCh, blackoutBedCh, blackoutBurstCh, crewBed, clickCh, calloutCh, keyCh, breathCh, alarmCh, sfxCh, airlockCh, thrustCh, groundCh, stepCh, cabinCh, cabinDownCh, cabinRattleCh, cabinSeparationCh };
         }
 
         private void ReadPhysicsGlobals()
@@ -893,10 +899,13 @@ namespace Lonapse
             {
                 if (v != null && ReferenceEquals(v, FlightGlobals.ActiveVessel))
                 {
+                    // a probe that blew up, not one that was recovered or removed: Mission Control lost it
+                    bool crashed = probeMode && !v.isEVA && Time.unscaledTime - activePartDiedAt < CrashPartWindow;
                     destroyedVessel = v;
                     gateOpen = false;
                     gateReason = RDestroyed;
                     HardSilence(RDestroyed);
+                    if (crashed && director != null) director.OnVesselLost();
                 }
             }
             catch (Exception e) { Log.Exception("OnVesselWillDestroy", e); }
@@ -961,7 +970,15 @@ namespace Lonapse
                 if (to == Vessel.Situations.LANDED || to == Vessel.Situations.SPLASHED) launchPhase = false;
                 if ((from == Vessel.Situations.PRELAUNCH || from == Vessel.Situations.LANDED || from == Vessel.Situations.SPLASHED)
                     && to == Vessel.Situations.FLYING && !a.host.isEVA) // an EVA hop is no liftoff
+                {
                     stress.AddImpulse(settings.tuning.impulseLiftoff);
+                    // the liftoff exchange is for a launch from the pad or the runway, not a hop on another body
+                    if (from == Vessel.Situations.PRELAUNCH) director.OnLiftoff();
+                }
+                // a new orbit from an ascent or an aerobrake, not a capture from an escape orbit
+                if (to == Vessel.Situations.ORBITING && !a.host.isEVA
+                    && (from == Vessel.Situations.FLYING || from == Vessel.Situations.SUB_ORBITAL))
+                    director.OnOrbitReached();
                 // an EVA kerbal goes LANDED and FLYING on every hop: no touchdown there, a fall has its own lines
                 if ((to == Vessel.Situations.LANDED || to == Vessel.Situations.SPLASHED) && !a.host.isEVA
                     && (from == Vessel.Situations.FLYING || from == Vessel.Situations.SUB_ORBITAL))
@@ -978,6 +995,7 @@ namespace Lonapse
                 Vessel pv = p.vessel;
                 if (pv != null && ReferenceEquals(pv, FlightGlobals.ActiveVessel))
                 {
+                    activePartDiedAt = Time.unscaledTime;
                     // part deaths always count, also inside the docking quiet window
                     bool inDocking = stress.motionQuietLeft > 0f || docking.InGuard(settings.tuning);
                     stress.AddImpulse(settings.tuning.impulsePartDie, true);
@@ -1173,6 +1191,7 @@ namespace Lonapse
                 if (settings.subtitles != lastSubtitles) { lastSubtitles = settings.subtitles; if (!lastSubtitles) subtitles.Clear(); }
 
                 PollStage(v);
+                director.PollActionGroups(v, dt);
                 PollChutes(v, dt);
                 PollThrottle(v, dt);
                 countdown.Update(dt, v);
@@ -1224,7 +1243,7 @@ namespace Lonapse
         private void UpdateChannels(float dt)
         {
             // Also runs with an empty/frozen ship or a closed gate, when the ordinary director tick is skipped.
-            if (director != null) director.UpdateControlBed();
+            if (director != null) { director.UpdateControlBed(); director.UpdateDelayHiss(); }
             float globalMul = gateGain * settings.masterVolume * gameGain * (evaMode ? settings.evaRadioVolume : 1f);
             // a sound effect is the ship or the kerbal itself, not the suit radio: the EVA radio volume leaves it alone
             float sfxMul = gateGain * settings.masterVolume * gameGain;
@@ -1252,6 +1271,8 @@ namespace Lonapse
 
         private float CategoryVolume(VoiceChannel c)
         {
+            if (ReferenceEquals(c, blackoutBedCh) || ReferenceEquals(c, blackoutBurstCh))
+                return settings.sfxVolume * settings.blackoutStaticVolume;
             if (ReferenceEquals(c, keyCh) || c.keySound) return settings.sfxVolume * KeySoundScale;
             switch (c.kind)
             {
@@ -1673,6 +1694,9 @@ namespace Lonapse
             if (ev == null || !settings.throttleCallouts) return;
             if (countdown != null && countdown.Running) { Log.Info("Throttle callout skipped: countdown running"); return; }
             string evName = ev == "full" ? "throttle_full" : "throttle_cut";
+            // a throttle call never cuts a line off, and it is checked before the shared cooldown, so a skipped one does
+            // not take the cooldown from the next staging or parachute callout
+            if (director.AirBusy) { Log.Info("Throttle callout skipped (" + evName + "): somebody is talking"); return; }
             if (!callouts.TryShared(Time.unscaledTime, settings.tuning.calloutCooldown)) { Log.Info("Throttle callout skipped (" + evName + "): cooldown"); return; }
             string why = director.PlayCallout(evName, null, 0f, evName);
             if (why != null) Log.Info("Throttle callout not spoken (" + evName + "): " + why);
@@ -2102,7 +2126,7 @@ namespace Lonapse
         /// Stage-number fallback requires lost parts or an ignited engine as proof. Docking topology changes
         /// rebase the observations while the vessel and stage list settle.
         /// </summary>
-        // stage number -> bit 1 decoupler or fairing, bit 2 engine. Refreshed every second, because the decoupled
+        // stage number -> bit 1 decoupler or fairing, bit 2 engine, bit 4 parachute. Refreshed every second, because the decoupled
         // parts may already belong to another vessel when onStageActivate arrives.
         private readonly Dictionary<int, int> stageParts = new Dictionary<int, int>();
         private readonly HashSet<uint> stageVesselParts = new HashSet<uint>();
@@ -2141,6 +2165,7 @@ namespace Lonapse
                     PartModule pm = p.Modules[m];
                     if (pm is ModuleDecouplerBase || pm is ModuleProceduralFairing) bits |= 1;
                     else if (pm is ModuleEngines) bits |= 2;
+                    else if (pm is ModuleParachute) bits |= 4;
                 }
                 if (bits == 0) continue;
                 int st = p.inverseStage, old;
@@ -2151,6 +2176,20 @@ namespace Lonapse
 
         /// <summary>What the stage holds (cached scan plus a live scan of the active vessel).</summary>
         public StageKind StageContents(int stage)
+        {
+            int bits = StageBits(stage);
+            return PacingRules.ClassifyStage((bits & 1) != 0, (bits & 2) != 0);
+        }
+
+        /// <summary>The stage only opens parachutes: the parachute callout speaks for it, not the staging one.</summary>
+        public bool StageOnlyChutes(int stage)
+        {
+            int bits = StageBits(stage);
+            return PacingRules.ChutesOnlyStage((bits & 1) != 0, (bits & 2) != 0, (bits & 4) != 0);
+        }
+
+        /// <summary>The bits of ScanStages for one stage, the cached scan plus a live scan of the active vessel.</summary>
+        private int StageBits(int stage)
         {
             int bits;
             stageParts.TryGetValue(stage, out bits);
@@ -2167,11 +2206,12 @@ namespace Lonapse
                             PartModule pm = p.Modules[m];
                             if (pm is ModuleDecouplerBase || pm is ModuleProceduralFairing) bits |= 1;
                             else if (pm is ModuleEngines) bits |= 2;
+                            else if (pm is ModuleParachute) bits |= 4;
                         }
                     }
             }
             catch (Exception e) { Log.WarnOnce("stagecontents", "Stage scan failed: " + e.Message); }
-            return PacingRules.ClassifyStage((bits & 1) != 0, (bits & 2) != 0);
+            return bits;
         }
 
         private void PollStage(Vessel v)
@@ -2205,14 +2245,14 @@ namespace Lonapse
             if (chutePollTimer > 0f) return;
             Tuning tu = settings.tuning;
             chutePollTimer = Math.Max(0.05f, tu.chutePollInterval);
-            int semi, full;
-            try { chutes.Poll(v, out semi, out full); }
+            int semi, full, drogue;
+            try { chutes.Poll(v, out semi, out full, out drogue); }
             catch (Exception e) { Log.Exception("PollChutes", e); return; }
-            if (semi == 0 && full == 0) return;
-            ChuteCallout c = callouts.OnChutes(Time.unscaledTime, semi, full, tu.chuteGroupCooldown, tu.chuteFullMinGap, tu.calloutCooldown);
-            string what = semi > 0 ? "parachute semi-deployed x" + semi : "parachute deployed x" + full;
+            if (semi == 0 && full == 0 && drogue == 0) return;
+            ChuteCallout c = callouts.OnChutes(Time.unscaledTime, semi + drogue, full, tu.chuteGroupCooldown, tu.chuteFullMinGap, tu.calloutCooldown);
+            string what = drogue > 0 ? "drogue deployed x" + drogue : semi > 0 ? "parachute semi-deployed x" + semi : "parachute deployed x" + full;
             if (c == ChuteCallout.None) { Log.Info("Parachute callout skipped (" + what + "): grouped or cooldown"); return; }
-            string why = director.PlayCallout(semi > 0 ? "chute_semi" : "chute_full", null, 0f, what); // checks the gate itself
+            string why = director.PlayCallout(drogue > 0 ? "chute_drogue" : semi > 0 ? "chute_semi" : "chute_full", null, 0f, what); // checks the gate itself
             if (why != null) Log.Info("Parachute callout not spoken (" + what + "): " + why);
         }
 
@@ -2259,7 +2299,6 @@ namespace Lonapse
             bool mute = muteKey != KeyCode.None && Input.GetKeyDown(muteKey);
             bool count = countdownKey != KeyCode.None && Input.GetKeyDown(countdownKey);
             if (!mute && !count) return;
-            if (GUIUtility.keyboardControl != 0) return;
             try { if (InputLockManager.IsLocked(ControlTypes.KEYBOARDINPUT)) return; } catch (Exception) { }
             if (mute && (muteModifier == KeyCode.None || ModifierHeld(muteModifier))) ToggleMute();
             if (count && (countdownModifier == KeyCode.None || ModifierHeld(countdownModifier))) ToggleCountdown();

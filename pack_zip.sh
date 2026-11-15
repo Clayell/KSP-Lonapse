@@ -36,6 +36,7 @@ for f in Icons/button.png Plugins/Lonapse.dll LICENSE-UNICODE.txt Fonts/unicode.
          Phrases/Probe/science_contracts.tsv Phrases/Probe/docking.tsv \
          Phrases/Probe/warp.tsv Phrases/Probe/stress.tsv \
          Patches/Lonapse_StockCores.cfg Compat/DeepFreeze/deepfreeze.tsv \
+         Phrases/action_groups.tsv Phrases/english_spanish.tsv Patches/Lonapse_Voicelines.cfg \
          Sounds/sfx/control_room_loop/sfx_control_room_loop_000.wav \
          Sounds/sfx/cabin_rattle/sfx_cabin_rattle_000.wav \
          Sounds/sfx/cabin_separation/sfx_cabin_separation_000.wav; do

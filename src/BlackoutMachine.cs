@@ -14,6 +14,8 @@ namespace Lonapse
         public BlackoutState state = BlackoutState.Clear;
         private float enterTimer, exitTimer, stateTimer, staticDuration, crackleLeft;
         public float blackoutDuration;
+        private float probeBeepIn;   // probe mode: seconds to the next lone beep in the blackout
+        private bool noticeQueued;
 
         public BlackoutMachine(LonapseAddon host, System.Random rng)
         {
@@ -31,15 +33,18 @@ namespace Lonapse
             state = BlackoutState.Clear;
             enterTimer = exitTimer = stateTimer = 0f;
             blackoutDuration = 0f;
+            probeBeepIn = 0f;
+            noticeQueued = false;
             host.director.radioSilent = false;
             host.director.mcBlackout = false;
             host.director.staticChop = false;
+            if (host.blackoutBedCh != null) host.blackoutBedCh.Stop();
+            if (host.blackoutBurstCh != null) host.blackoutBurstCh.Stop();
         }
 
-        /// <summary>Blackout with crew: Mission Control and the telemetry beeps fade, the crew keeps its radio.</summary>
+        /// <summary>Let an active Control line finish, then silence its bed and telemetry beeps.</summary>
         private void FadeOutMissionControl(float seconds)
         {
-            host.control.FadeOut(seconds);
             host.controlBed.FadeOut(seconds);
             for (int i = 0; i < host.beep.Length; i++) host.beep[i].FadeOut(seconds);
         }
@@ -78,7 +83,8 @@ namespace Lonapse
                 if (state != BlackoutState.Clear)
                 {
                     Reset();
-                    host.staticCh.FadeOutOnce(0.3f);
+                    host.blackoutBedCh.FadeOutOnce(0.3f);
+                    host.blackoutBurstCh.FadeOutOnce(0.3f);
                 }
                 return;
             }
@@ -100,7 +106,9 @@ namespace Lonapse
                         crackleLeft = U(tu.crackleMin, tu.crackleMax);
                         host.director.staticChop = true;
                         AudioClip loop = ClipLibrary.Next("sfx/loop", rng);
-                        if (loop != null) host.staticCh.Play(loop, 1f, 1f, true, tu.staticRampTime);
+                        if (loop != null) host.blackoutBedCh.Play(loop, 1f, 1f, true, 0.15f);
+                        AudioClip start = ClipLibrary.Next("sfx/burst", rng);
+                        if (start != null) host.blackoutBurstCh.Play(start, 1f, 1f, false, 0f);
                     }
                     break;
 
@@ -113,10 +121,7 @@ namespace Lonapse
                         AudioClip burst = ClipLibrary.Next("sfx/burst", rng);
                         if (burst != null)
                         {
-                            // overlay crackle on the static loop (OneShot goes through the same source, so it
-                            // follows the same volume and gate), or play it directly if there is no loop
-                            if (host.staticCh.Busy) host.staticCh.OneShot(burst, U(0.5f, 1.0f));
-                            else host.staticCh.Play(burst, U(0.5f, 1.0f), 1f, false, 0f);
+                            host.blackoutBurstCh.Play(burst, U(0.5f, 1.0f), 1f, false, 0f);
                         }
                     }
                     if (p < tu.blackoutExit) exitTimer += dt; else exitTimer = 0f;
@@ -124,20 +129,21 @@ namespace Lonapse
                     {
                         Go(BlackoutState.Clear);
                         host.director.staticChop = false;
-                        host.staticCh.FadeOut(tu.staticFadeOut);
+                        host.blackoutBedCh.FadeOut(tu.staticFadeOut);
+                        host.blackoutBurstCh.FadeOut(tu.staticFadeOut);
                     }
                     else if (stateTimer >= staticDuration || p >= tu.blackoutDeep)
                     {
                         Go(BlackoutState.Blackout);
                         blackoutDuration = 0f;
                         host.director.staticChop = false;
-                        host.staticCh.FadeOut(tu.staticFadeOut);
                         if (CrewTalks)
                         {
                             // the crew keeps talking (staging callouts, radio lines), Mission Control cannot answer
                             host.director.mcBlackout = true;
                             host.director.DropMcItems();
                             FadeOutMissionControl(0.3f);
+                            noticeQueued = host.director.EnqueueBlackoutNotice();
                         }
                         else
                         {
@@ -146,6 +152,7 @@ namespace Lonapse
                             host.director.radioSilent = true;
                             host.director.ClearRadioQueue();
                             FadeOutRadioKeepIntercom(0.3f);
+                            probeBeepIn = U(2f, 4f);
                         }
                     }
                     break;
@@ -153,12 +160,21 @@ namespace Lonapse
                 case BlackoutState.Blackout:
                     host.director.radioSilent = !CrewTalks;
                     host.director.mcBlackout = CrewTalks;
+                    if (CrewTalks && !noticeQueued) noticeQueued = host.director.EnqueueBlackoutNotice();
+                    if (!CrewTalks)
+                    {
+                        // the probe beeps to itself now and then, nervous or about the heat
+                        probeBeepIn -= dt;
+                        if (probeBeepIn <= 0f) probeBeepIn = host.director.PlayProbeBlackoutBeep() ? U(8f, 15f) : 1f;
+                    }
                     blackoutDuration += dt;
                     if (p < tu.blackoutExit) exitTimer += dt; else exitTimer = 0f;
                     if (exitTimer >= tu.blackoutExitTime)
                     {
                         host.director.radioSilent = false;
                         host.director.mcBlackout = false;
+                        host.blackoutBedCh.FadeOut(tu.staticFadeOut);
+                        host.blackoutBurstCh.FadeOut(tu.staticFadeOut);
                         if (blackoutDuration >= tu.blackoutMinDuration)
                         {
                             Go(BlackoutState.Recovering);

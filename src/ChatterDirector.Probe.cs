@@ -129,7 +129,7 @@ namespace Lonapse
                 float d;
                 if (first) d = delay;
                 else if (role == "mc") d = ResponseDelay(s);
-                else d = (prevRole == "mc" ? U(0.3f, 0.7f) + host.LightDelay : U(0.2f, 0.5f));
+                else d = prevRole == "mc" ? U(0.3f, 0.7f) : U(0.2f, 0.5f);
                 if (role == "mc") EnqueueMc(e.Folder, d, e);
                 else
                 {
@@ -139,7 +139,7 @@ namespace Lonapse
                     {
                         // the answer was lost in the static: MC asks again, the probe repeats (annoyed when proud)
                         EnqueueMc(sayAgain.Lines[0].Folder, ResponseDelay(s), sayAgain.Lines[0]);
-                        Utterance rep = Enqueue(UttKind.ProbeBeep, ProbeRules.RepeatMood(e.Beep), U(0.3f, 0.7f) + host.LightDelay, 0f, null);
+                        Utterance rep = Enqueue(UttKind.ProbeBeep, ProbeRules.RepeatMood(e.Beep), U(0.3f, 0.7f), 0f, null);
                         if (rep != null) rep.entry = sayAgain.Lines[1];
                         lastSayAgain = clock;
                         Log.Info("Say again inserted into " + sc.Id + " (" + sayAgain.Id + "), signal " + host.signal.signal.ToString("0.00"));
@@ -188,7 +188,7 @@ namespace Lonapse
                     string rowMood = (u.folder != null && !data) ? u.folder : (e != null ? e.Beep : null);
                     string mood = data ? "happy" : ProbeRules.BeepMood(rowMood, ProbeTense);
                     string text = data ? (e != null ? PhraseClips.Subtitle(e) : ProbeRules.DataSubtitle)
-                                : (e != null && mood == rowMood) ? PhraseClips.Subtitle(e) : ProbeRules.BeepSubtitle(mood);
+                                : (e != null && (mood == rowMood || IsActionBeep(e))) ? PhraseClips.Subtitle(e) : ProbeRules.BeepSubtitle(mood);
                     string who = host.ProbeDisplayName;
                     AudioClip clip = null;
                     if (cfg.beepsEnabled && data) clip = ClipLibrary.Next(ProbeCores.DataFolder, rng);
@@ -216,6 +216,43 @@ namespace Lonapse
                 }
             }
             return StartResult.Skip;
+        }
+
+        /// <summary>The beep the player set for an action group. A tense probe beeps scared, but the subtitle the
+        /// player chose stays.</summary>
+        static bool IsActionBeep(PhraseEntry e)
+        {
+            return e.ClipKey != null && e.ClipKey.StartsWith("action_beep_", StringComparison.Ordinal);
+        }
+
+        /// <summary>A reentry blackout in probe mode: the probe beeps to itself (flight.probe_blackout), nervous or
+        /// about the heat. Nothing goes over the link, the player hears the probe through the static. It skips the
+        /// queue, the blackout keeps that empty. False when nothing played.</summary>
+        public bool PlayProbeBlackoutBeep()
+        {
+            if (!host.probeMode || !host.CanStartAudio || !host.settings.radioEnabled || ProbeAsleep) return false;
+            VoiceChannel b = host.beep[1];
+            if (b.Busy) return false;
+            PhraseScene sc = PickProbe(ProbeRules.BlackoutEvent, x => x.Lines.Count == 1);
+            PhraseEntry e = sc != null ? sc.Lines[0] : null;
+            string mood = e != null && !string.IsNullOrEmpty(e.Beep) ? e.Beep : ProbeRules.ScaredMood;
+            string text = e != null ? PhraseClips.Subtitle(e) : ProbeRules.BeepSubtitle(mood);
+            string who = host.ProbeDisplayName;
+            AudioClip clip = host.settings.beepsEnabled ? VoiceClip(host.probeVoice, mood) : null;
+            if (clip == null) { ShowProbeSubtitle(who, text, 2.5f); return true; }
+            float pitch = ProbeRules.BeepPitch(host.stress.stress, ProbeDrowsy, Tu.probeBeepPitchMax);
+            RadioProfile p = Profile;
+            b.SetBand(p.HighPassHz, p.LowPassHz);
+            b.Play(clip, 0.55f, pitch, false, 0f);
+            b.probeBeep = true;
+            // through the plasma: rougher than a normal beep
+            b.baseDistortion = Math.Max(0.2f, 0.5f * p.Distortion);
+            b.dropout = host.Dropout;
+            ShowProbeSubtitle(who, text, Math.Max(2.5f, b.duration + 1f));
+            lastLine = who + ": " + mood + " blackout beeps (" + b.clipName + ")";
+            Audit.Add("probe " + lastLine);
+            Log.Info("Probe blackout beep: " + (sc != null ? sc.Id : mood));
+            return true;
         }
 
         /// <summary>
@@ -461,14 +498,15 @@ namespace Lonapse
                 // then Mission Control still gets its one line, like the closed-gate final call.
                 // signal_lost: Mission Control cannot reach the probe, so nobody talks.
                 if (ev == EventWatchers.SignalLost) { why = "probe out of contact"; return EvGo.Drop; }
-                if (ev != EventWatchers.CrewLost || !host.settings.radioEnabled) { why = "not in probe mode"; return EvGo.Drop; }
+                // vessel_lost: the gate reopened on another probe before the final call played, it plays here
+                if (!FinalEvent(ev) || !host.settings.radioEnabled) { why = "not in probe mode"; return EvGo.Drop; }
                 if (HasRadioItems() || Holding || airEventPrio >= r.priority) { why = "radio busy"; return EvGo.Wait; }
-                PhraseEntry fe = FirstLine(PickFinalScene());
-                if (fe == null || fe.Role != "mc") { why = "no MC-only crew_lost line"; return EvGo.Drop; }
+                PhraseEntry fe = FirstLine(PickFinalScene(ev));
+                if (fe == null || fe.Role != "mc") { why = "no MC-only " + ev + " line"; return EvGo.Drop; }
                 PreemptChatter();
                 EnqueueMc(fe.Folder, U(0.2f, 0.6f), fe);
                 airEventPrio = Math.Max(airEventPrio, Math.Max(1, r.priority));
-                StartSomber("crew lost");
+                if (ev == EventWatchers.CrewLost) StartSomber("crew lost");
                 lastEventResult = ev + " played (probe mode, MC only)";
                 return EvGo.Played;
             }

@@ -309,14 +309,15 @@ namespace Lonapse
         {
             "", "chatter", "relief", "staging", "countdown", "touchdown", "splashdown", "throttle_full", "throttle_cut",
             "plan_node", "burn_soon", "eva_check", "eva_fall", "station_check", "dock_approach", "dock_close", "dock_hard", "docked",
-            "chute_semi", "chute_full",
+            "chute_semi", "chute_drogue", "chute_full", "blackout_enter", "launch_pad", "liftoff", "orbit_reached", "fuel_low",
+            "reentry_heat", "welcome_home",
             // game events
-            "soi_enter", "science", "part_lost", "power_low", "power_ok", "signal_lost", "signal_back", "crew_lost",
+            "soi_enter", "science", "part_lost", "power_low", "power_ok", "signal_lost", "signal_back", "crew_lost", "vessel_lost",
             // Probe and crew in the cabin (a crewed vessel with a probe core)
             "probe_crew",
             // probe events
             "probe_chat", "probe_sleepy",
-            "probe_hail", "probe_stress", "probe_say_again", "probe_milestone", "probe_rover", "probe_data",
+            "probe_hail", "probe_stress", "probe_say_again", "probe_milestone", "probe_rover", "probe_data", "probe_blackout",
         };
         // "" (any), the science topics and home (soi_enter)
         private static readonly string[] TestTopics = PhraseTable.TopicCycle();
@@ -509,15 +510,33 @@ namespace Lonapse
 
         private void DrawSound(Settings s)
         {
-            s.masterVolume = Volume("Master", s.masterVolume);
+            s.masterVolume = Volume("Master", s.masterVolume, 1f);
             s.controlVolume = Volume("Mission Control", s.controlVolume);
             s.crewVolume = Volume("Crew", s.crewVolume);
             s.intercomVolume = Volume("Intercom", s.intercomVolume);
             s.calloutVolume = Volume("Callouts", s.calloutVolume, 2f);
             s.beepVolume = Volume("Probe beeps", s.beepVolume, 2f);
             s.sfxVolume = Volume("Sound effects", s.sfxVolume);
+            s.blackoutStaticVolume = Volume("Blackout static", s.blackoutStaticVolume, 1f);
             s.evaRadioVolume = Volume("EVA radio", s.evaRadioVolume);
-            Hint("100% gives twice the gain of the old 100% setting. Saved audio levels are kept at lower slider positions.");
+            Hint("Master and blackout static run from silent to 100%. Other volume sliders can boost above their old maximum.");
+
+            Header("Crew voice mixer");
+            Tuning tu = s.tuning;
+            tu.genderPitchMale = Mathf.Round(Row("Male pitch", tu.genderPitchMale, 0.8f, 1.3f, tu.genderPitchMale, "0.00'x'") * 100f) / 100f;
+            tu.genderPitchFemale = Mathf.Round(Row("Female pitch", tu.genderPitchFemale, 0.8f, 1.3f, tu.genderPitchFemale, "0.00'x'") * 100f) / 100f;
+            Hint("Each Kerbal keeps their own voice. Male and female pitches have separate starting points.");
+            tu.crewPlaybackSpeed = Mathf.Round(Row("Playback speed", tu.crewPlaybackSpeed, 0.75f, 1.25f, tu.crewPlaybackSpeed, "0.00'x'") * 100f) / 100f;
+            Hint("Changes speaking speed and pitch together. Use the pitch sliders to balance the result.");
+            tu.crewStressSemitones = Mathf.Round(Row("Stress pitch", tu.crewStressSemitones, 0f, 6f, tu.crewStressSemitones, "0.0' st'") * 10f) / 10f;
+            tu.crewPitchMax = Mathf.Round(Row("Pitch ceiling", tu.crewPitchMax, DcMath.CrewSpreadMax, 1.6f, tu.crewPitchMax, "0.00'x'") * 100f) / 100f;
+            Hint("Stress pitch raises a voice under stress, up to the pitch ceiling. The gender sliders and the speed come on top.");
+            tu.crewLpCalm = Mathf.Round(Row("Radio brightness", tu.crewLpCalm, 1800f, 8000f, tu.crewLpCalm, "0' Hz'") / 100f) * 100f;
+            tu.crewGritMix = Mathf.Round(Row("Stress grit", tu.crewGritMix, 0f, 2f, tu.crewGritMix * 100f, "0'%'" ) * 20f) / 20f;
+            tu.crewWobbleMix = Mathf.Round(Row("Voice wobble", tu.crewWobbleMix, 0f, 2f, tu.crewWobbleMix * 100f, "0'%'" ) * 20f) / 20f;
+            s.voiceCompressor = Toggle(s.voiceCompressor, "Voice compression");
+            s.voiceBoostDb = Mathf.Round(Row("Voice boost", s.voiceBoostDb, 0f, 12f, s.voiceBoostDb, "0' dB'"));
+            Hint("Grit and wobble follow stress and G forces. Compression evens out loud and quiet speech.");
 
             Header("Effects");
             s.radioStatic = Volume("Radio static", s.radioStatic);
@@ -556,7 +575,13 @@ namespace Lonapse
             s.throttleCallouts = Toggle(s.throttleCallouts, "Throttle callouts");
             s.planChatter = Toggle(s.planChatter, "Maneuver node talk");
             s.lightDelay = Toggle(s.lightDelay, "Light delay");
-            Hint("Far from Kerbin, Mission Control answers later (up to 10 s at Duna and beyond). Off: answers come right away.");
+            if (s.lightDelay)
+            {
+                Tuning tu = s.tuning;
+                tu.lightDelayMax = Row("Longest light delay", tu.lightDelayMax, 1f, DcMath.LightDelayCeiling, tu.lightDelayMax, "0' s'");
+                Hint("Far from Kerbin, Mission Control answers later. The longest wait is near the outer planets, Duna gets about 80% of it and the Mun under 10%. You hear a faint hiss while the call travels, and far out the talk keeps to shorter exchanges.");
+            }
+            else Hint("Off: Mission Control answers right away, wherever you are.");
 
             Header("Runtime voice");
             s.runtimeVoice = true;
@@ -570,6 +595,13 @@ namespace Lonapse
             s.runtimeScience = Toggle(s.runtimeScience, "Science points and contract funds");
             Hint("After a science reaction or a finished contract, Mission Control says the numbers.");
 
+            Header("Action group voicelines");
+            s.actionVoicelines = Toggle(s.actionVoicelines, "A voiceline when an action group fires");
+            Hint("Abort, Gear, Lights, Brakes, RCS, SAS and Custom 1 to 10. Set the lines of a craft up in the VAB or SPH, with the Lonapse button there.");
+            s.actionVoiceDefaults = Toggle(s.actionVoiceDefaults, "Built-in lines on craft without their own");
+            Hint("A craft you never set up calls out Abort, Gear and Lights with the built-in lines.");
+            s.actionVoiceCooldown = Row("Quiet time per action group", s.actionVoiceCooldown, 1f, 30f, s.actionVoiceCooldown, "0.0' s'");
+
             Header("Mission Control reacts to");
             s.eventSoi = Toggle(s.eventSoi, "A new sphere of influence");
             s.eventScience = Toggle(s.eventScience, "Science");
@@ -577,6 +609,7 @@ namespace Lonapse
             s.eventPower = Toggle(s.eventPower, "Low power");
             s.eventSignal = Toggle(s.eventSignal, "Lost and regained signal");
             s.eventCrewLoss = Toggle(s.eventCrewLoss, "A lost kerbal");
+            s.eventVesselLoss = Toggle(s.eventVesselLoss, "A crashed probe");
 
             Header("Kerbals");
             s.personalityEffects = Toggle(s.personalityEffects, "Personality");
@@ -919,8 +952,6 @@ namespace Lonapse
             Header("Sound");
             s.landingTones = Toggle(s.landingTones, "Landing and splashdown tones");
             s.stageTone = Toggle(s.stageTone, "Stage tone");
-            s.voiceBoostDb = Mathf.Round(Row("Voice boost", s.voiceBoostDb, 0f, 12f, Mathf.Round(s.voiceBoostDb), "0' dB'"));
-            Hint("Makes all voices louder. Use it when the voices are too quiet next to the game, even at full volume.");
             s.weakSignalVolume = Volume("Weak signal noise", s.weakSignalVolume);
             Hint("Extra static, crackle and grit on Mission Control when the signal gets weak. 0% keeps a weak signal clean.");
             s.signalDropouts = Toggle(s.signalDropouts, "Dropouts on a weak signal");

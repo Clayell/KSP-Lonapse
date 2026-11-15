@@ -116,7 +116,10 @@ namespace Lonapse
                 // persona (the full text is in the log through Describe)
                 sb.Append("    persona ").Append(k.persona != null ? k.persona.ToString() : "-")
                   .Append("  courage ").Append(k.courage.ToString("0.00", Inv)).Append("  stupidity ").Append(k.stupidity.ToString("0.00", Inv))
-                  .Append("  panicAt ").Append(k.panicAt.ToString("0.00", Inv)).Append(k.personaEffects ? "" : "  (effects off)").Append('\n');
+                  .Append("  tenseAt ").Append(k.tenseAt.ToString("0.00", Inv))
+                  .Append("  panicAt ").Append(k.panicAt.ToString("0.00", Inv))
+                  .Append(k.PanicNow > k.panicAt + 0.005f ? " (voice " + k.PanicNow.ToString("0.00", Inv) + ", escalated)" : "")
+                  .Append(k.personaEffects ? "" : "  (effects off)").Append('\n');
             }
             // faces and events
             sb.Append("face: ").Append(host.face != null ? (host.face.Status ?? "-") : "no face driver").Append('\n');

@@ -53,10 +53,10 @@ namespace Lonapse
 
         /// <summary>Piper processes besides calm Mission Control running at once (one per kind and delivery band, see
         /// RuntimeDelivery.KindFor). Each holds its own copy of the model in memory, so the least recently used one
-        /// stops when another is needed. Measured in game: about 108 MB per process. 9 fits what RuntimeVoiceHost
-        /// loads at the save start (mc.tense, mc.mc_panic, mc.callout, m, m.tense, f, f.tense) plus the crew
-        /// callout voices m.callout and f.callout, so a voice is never stopped and loaded again in a flight.</summary>
-        public const int MaxCrewWorkers = 9;
+        /// stops when another is needed. Measured in game: about 108 MB per process. Room for every kind besides calm
+        /// Mission Control (9, RuntimeVoiceHost.SessionKinds loads them all at the save start), so a voice is never
+        /// stopped and loaded again in a flight.</summary>
+        public static readonly int MaxCrewWorkers = RuntimeDelivery.Kinds.Length - 1;
         long useCounter;
 
         readonly Dictionary<string, Worker> workers = new Dictionary<string, Worker>();

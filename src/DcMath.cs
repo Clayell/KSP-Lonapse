@@ -59,6 +59,27 @@ namespace Lonapse
             return (float.IsNaN(x) || float.IsInfinity(x)) ? 0f : x;
         }
 
+        /// <summary>x, or <paramref name="fallback"/> when x is NaN or infinite.</summary>
+        public static float Finite(float x, float fallback)
+        {
+            return (float.IsNaN(x) || float.IsInfinity(x)) ? fallback : x;
+        }
+
+        /// <summary>Highest setting of the light delay slider, in seconds.</summary>
+        public const float LightDelayCeiling = 30f;
+
+        /// <summary>
+        /// Light delay in seconds at km from the home body. A log curve, because the real delay (minutes at Duna)
+        /// would kill every conversation: maxDelay * log10(1 + km / 10000) / 4, so the slider value is reached near
+        /// the outer planets. At 10 s that is about 0.9 s at the Mun, 2 s at Minmus and 8 s at Duna.
+        /// </summary>
+        public static float LightDelay(double km, float maxDelay)
+        {
+            if (!(km > 0.0) || !(maxDelay > 0f)) return 0f;
+            float max = Math.Min(maxDelay, LightDelayCeiling);
+            return max * Clamp01((float)(Math.Log10(1.0 + km / 10000.0) / 4.0));
+        }
+
         /// <summary>
         /// Scheduler mean interval: exp(lerp(ln tQuiet, ln tManic, s)) / rateMultiplier.
         /// </summary>
@@ -145,6 +166,43 @@ namespace Lonapse
             float raise = (float)Math.Pow(2.0, Clamp01(sk) * stressSemitones / 12.0);
             float p = basePitch * raise * (1f - 0.06f * Clamp01(gStrain));
             return Clamp(p, CrewPitchMin, Math.Max(CrewPitchMin + 0.01f, maxPitch));
+        }
+
+        /// <summary>Gender baselines of the crew voices: the per-kerbal spread starts from these, the mixer sliders
+        /// (Tuning.genderPitchFemale and genderPitchMale) move a gender relative to them.</summary>
+        public const float GenderPitchFemale = 1.06f, GenderPitchMale = 0.96f;
+
+        /// <summary>
+        /// The playback pitch of a crew line with the crew voice mixer: CrewPitch (own pitch, stress raise, G drop,
+        /// floor and ceiling), then the gender slider relative to its baseline and the playback speed. The mixer
+        /// factors come after the floor and the ceiling, so a slider is always heard and two kerbals of a gender
+        /// keep their distance (a clamp after the factor would press them onto one pitch). Bad values give 1.
+        /// </summary>
+        public static float CrewVoicePitch(float basePitch, bool female, float sk, float gStrain, float stressSemitones,
+                                           float maxPitch, float genderFemale, float genderMale, float speed, bool recordedPanic)
+        {
+            float gender = female ? genderFemale / GenderPitchFemale : genderMale / GenderPitchMale;
+            if (float.IsNaN(gender) || float.IsInfinity(gender) || gender <= 0f) gender = 1f;
+            if (float.IsNaN(speed) || float.IsInfinity(speed) || speed <= 0f) speed = 1f;
+            if (float.IsNaN(basePitch) || float.IsInfinity(basePitch) || basePitch <= 0f) basePitch = 1f;
+            sk = Finite(sk);
+            gStrain = Finite(gStrain);
+            stressSemitones = Clamp(Finite(stressSemitones), 0f, 12f);
+            maxPitch = Clamp(Finite(maxPitch, CrewSpreadMax), CrewSpreadMax, 2f);
+            return CrewPitch(basePitch, sk, gStrain, stressSemitones, maxPitch, recordedPanic) * gender * speed;
+        }
+
+        /// <summary>
+        /// Low-pass of a crew radio line: from the calm cutoff (the "Radio brightness" slider) toward the stress
+        /// cutoff, times the kerbal's timbre, darker under G, never under minHz. Stress only ever darkens: with the
+        /// calm cutoff set below the stress one, stress used to make the voice brighter.
+        /// </summary>
+        public static float CrewLowPass(float calmHz, float stressHz, float sk, float timbre, float gStrain, float minHz)
+        {
+            float stress = Math.Min(stressHz, calmHz);
+            float cutoff = Lerp(calmHz, stress, Clamp01(sk)) * timbre * Lerp(1f, 0.25f, Clamp01(gStrain));
+            if (float.IsNaN(cutoff)) cutoff = calmHz;
+            return Math.Max(cutoff, minHz);
         }
 
         /// <summary>

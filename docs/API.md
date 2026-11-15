@@ -178,6 +178,15 @@ You can check numbers with conditions like `fuel<20`, `ec>=25`, `x_repeat=0` or 
 vessel's situation with `orbit`, `flight`, `suborbital`, `landed`, `escape` or `other`. Several situation names
 mean any of those situations can match. Other conditions must all match.
 
+Use `crew=1` in `when` for exactly one kerbal aboard the active non-EVA vessel. It works in
+`Crew/events.tsv` flight scenes. EVA uses a separate vessel and does not provide the `crew` value.
+
+With one kerbal aboard, a flight scene is skipped when a crew line says "we", "us", "they" or "everyone", or a
+Spanish plural like "nos", "estamos" or "vamos". Mission Control lines are skipped for the Spanish plural "os" and
+its commands, like "revisad" or "mantened". This holds for every version of a line. Write a few scenes per trigger
+in the singular, or a one-kerbal capsule will hear only a small part of them. The check is in
+`ChatterDirector.SlotsOk` ([ChatterDirector.cs](../src/ChatterDirector.cs)).
+
 Use `job_a=scientist` or `job_b=pilot` to check a participant's job. Use `trait_a=nervous` for a personality
 trait. `job_a!=scientist` checks that A has another job. A missing participant does not pass either job check.
 These checks also work for the selected kerbal in reports and replies.
@@ -257,7 +266,7 @@ name starts with `orbit`. The asterisk is a match rule and is never spoken.
 
 ### All flight triggers
 
-These are all 36 accepted `flight.*` triggers. The list comes from `PhraseTable.Events` in
+These are all 46 accepted `flight.*` triggers. The list comes from `PhraseTable.Events` in
 [PhraseTable.cs](../src/PhraseTable.cs). Write the full value, including `flight.`, in the `trigger` column.
 The related setting, flight conditions and available speakers still decide whether a line can play.
 
@@ -273,12 +282,25 @@ Flight actions:
 
 - `flight.staging` is a staging callout.
 - `flight.chute_semi` is a partially deployed parachute callout.
+- `flight.chute_drogue` is a drogue parachute callout.
 - `flight.chute_full` is a fully deployed parachute callout.
 - `flight.throttle_full` is a full-throttle callout.
 - `flight.throttle_cut` is a throttle-cutoff callout.
 - `flight.plan_node` is a maneuver-node planning response.
 - `flight.burn_soon` is a reminder before a maneuver burn.
 - `flight.countdown` is a launch countdown line.
+- `flight.launch_pad` is an exchange on the launch pad, once per vessel a few seconds after the scene loads.
+- `flight.liftoff` is an exchange right after the vessel leaves the launch pad.
+- `flight.orbit_reached` is an exchange when the vessel reaches a stable orbit after an ascent or an aerobrake. It
+  plays once per vessel and body, and not after a capture from an escape orbit.
+- `flight.fuel_low` is a warning exchange when the burning stage drops to 10% liquid fuel with the throttle open.
+  Only the last stage with engines gets it, once per stage. A refuel above 25% allows a new call.
+- `flight.reentry_heat` is an exchange at the start of an atmospheric entry: the vessel falls into the top half of
+  the atmosphere at 60% of orbit speed or more, or the plasma starts to glow. It comes before the blackout, once per
+  entry.
+- `flight.welcome_home` is an exchange when the vessel rests on the home body after a trip to space or another
+  body. It plays once per vessel. Use `when` with `splashed=1` or `splashed=0` for water or land lines.
+- `flight.blackout_enter` is the crew line when the radio blackout starts.
 
 Docking and landing:
 
@@ -299,6 +321,8 @@ Game events:
 - `flight.signal_lost` is a response to losing the signal.
 - `flight.signal_back` is a response when the signal returns.
 - `flight.crew_lost` is a response to losing a crew member.
+- `flight.vessel_lost` is the Mission Control line when the active probe crashes in probe mode. It plays as a
+  final call after the vessel is gone, so a scene must have one Mission Control line and no slots.
 
 Science experiments:
 
@@ -338,6 +362,8 @@ Probe dialogue:
 - `flight.probe_milestone` is a probe milestone response.
 - `flight.probe_rover` is a probe rover-driving response.
 - `flight.probe_data` is a science data transmission response.
+- `flight.probe_blackout` is a lone probe beep in a reentry blackout. Nothing gets through the plasma, so it has
+  only `probe` rows, one per scene. The probe beeps every 8 to 15 seconds while the blackout lasts.
 - `flight.probe_crew` is a conversation between crew and a probe on the same vessel. It has no Mission Control
   lines and needs crew aboard.
 
@@ -469,6 +495,12 @@ Science talks can also use `{temp_c}`, `{press_kpa}`, `{grav_g}`, `{sci_flight}`
 `exp_count>=2` is for a batch of experiments. It can use `{exp_count}`, `{exp_list}` and `{sci}` for the total.
 `data_sent=1` means the data was transmitted. `data_sent=0` means it was stored, so the line should not claim
 Mission Control received it.
+
+`sci_first=1` is the first data of that experiment anywhere. `sci_new=1` means this subject (experiment, body,
+situation and biome) had no science yet. A crew report gets all of its points at once, so `sci_left` is 0 after a
+new one too. Use `sci_new=0 sci_left<1` for a real repeat. `sci_sit` is the situation of the subject: 1 landed,
+2 splashed, 3 flying low, 4 flying high, 5 in space low, 6 in space high. A talk of the experiment itself with
+`sci_new=1` always wins when it fits. So does a talk with `sci_first=1`.
 
 The Surface Scanning Module is a resource scanner. It does not fire the science experiment event. A powered,
 enabled scanner on the active landed vessel provides `{resource}` and `{resource_pct}` when its reading is

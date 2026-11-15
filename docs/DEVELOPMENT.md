@@ -238,13 +238,13 @@ These keys are not all in the window, but you can edit them in the file:
 | `subtitles` | `True` | Show an English subtitle for each line ("Show subtitles" in the window) |
 | `countdownAutoStage` | `False` | Launch countdown: activate the next stage on the liftoff call |
 | `rogerBeep` | `True` | Short beep when the crew lets go of the key |
-| `lightDelay` | `True` | MC answers later far from Kerbin: about 0.9 s at the Mun, 2 s at Minmus, up to `lightDelayMax` (10 s) at the outer planets |
+| `lightDelay` | `False` | MC answers later far from Kerbin. `lightDelayMax` (1 to 30 s, default 10) is reached near the outer planets, Duna gets about 80% of it and the Mun under 10%. A faint hiss fills waits from 1.5 s, and from 3 s scenes with one round trip are preferred |
 | `signalDropouts` | `True` | Weak signal: MC lines get short gaps and a bit of crunch |
 | `TUNING { ... }` | | Every threshold, weight and time constant, see below |
 
 The `TUNING` block holds all the numbers behind the behaviour. They are my own starting values from playing, not
 measured ones. If something feels off, this is where you can change it. The tuning tips further down help with that.
-Nearby suit-to-suit and ship-to-ship conversations use only the normal conversational pause, without the KSC light delay.
+Nearby suit-to-suit and ship-to-ship conversations use only the normal conversational pause, without the KSC light delay. Only Mission Control lines wait for the light delay. A crew or probe line that answers MC comes right away, because the ship hears MC the moment the call arrives.
 
 ## How it behaves
 

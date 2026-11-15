@@ -1,0 +1,72 @@
+group	state	speaker	mode	default	spanish	english	reply_spanish	reply_english	beep
+# Built-in voicelines for action groups. The player picks and changes them in the VAB and SPH (Action Group Voicelines).									
+# group: abort gear lights brakes rcs sas, or custom (a preset for Custom 1 to 10, never assigned by itself), or reply (a standard answer of Mission Control).									
+# state: on, off or any. Only gear, lights, brakes, rcs and sas have on and off. speaker: auto (a kerbal) or mc. mode: radio or intercom.									
+# default on: switched on for a craft without voicelines of its own. Brakes, RCS and SAS are off: they change too often in a flight.									
+# spanish is what the voice says (it becomes loñapsE), english is the subtitle.									
+# reply_spanish and reply_english: what Mission Control answers to that row. Empty: one of the reply rows. A line the player wrote gets a reply row too, unless the player typed an answer.									
+abort	any	auto	radio	on	¡Abortar! ¡Abortar! ¡Abortar!	Abort! Abort! Abort!	¡Aborto confirmado! ¡Equipos de rescate en camino!	Abort confirmed! Recovery teams are on their way!	
+abort	any	auto	radio	on	¡Separación de emergencia iniciada!	Emergency separation initiated!	¡Recibido, separación de emergencia! ¡Os seguimos!	Copy, emergency separation! We are tracking you!	
+abort	any	auto	radio	on	¡Tenemos que salir de aquí!	We need to get out of here!	¡Recibido! ¡Alejaos del cohete!	Copy! Get clear of the rocket!	
+abort	any	auto	radio	on	¡Control de Misión, iniciamos el aborto de emergencia!	Mission Control, initiating emergency abort!	¡Recibido, aborto de emergencia! ¡Buena suerte!	Copy, emergency abort! Good luck!	
+abort	any	mc	radio	on	¡Aborto confirmado! ¡Salid de ahí!	Abort confirmed! Get out of there!			
+gear	on	auto	radio	on	Tren de aterrizaje desplegado.	Landing gear deployed.	Recibido, tren desplegado.	Copy, gear deployed.	
+gear	on	auto	radio	on	El tren está bajando.	Gear is coming down.	Confirmamos el tren abajo.	We confirm gear down.	
+gear	on	auto	radio	on	Preparando el aterrizaje.	Preparing for landing.	Recibido. Tenéis permiso para aterrizar.	Copy. You are cleared to land.	
+gear	off	auto	radio	on	Tren de aterrizaje recogido.	Landing gear retracted.	Recibido, tren recogido.	Copy, gear retracted.	
+gear	off	auto	radio	on	El tren está subiendo.	Gear coming up.	Confirmamos el tren arriba.	We confirm gear up.	
+gear	off	auto	radio	on	Configuración de aterrizaje desactivada.	Landing configuration disengaged.	Recibido, configuración limpia.	Copy, clean configuration.	
+lights	on	auto	radio	on	Luces exteriores activadas.	External lights activated.	Recibido, luces activadas.	Copy, lights activated.	
+lights	on	auto	radio	on	Las luces están encendidas.	Lights are on.	Os vemos mejor ahora.	We see you better now.	
+lights	on	auto	radio	on	Sistemas de iluminación en línea.	Illumination systems online.	Confirmamos la iluminación en línea.	We confirm illumination online.	
+lights	off	auto	radio	on	Luces exteriores apagadas.	External lights switched off.	Recibido, luces apagadas.	Copy, lights off.	
+lights	off	auto	radio	on	Las luces están apagadas.	Lights are out.	Recibido. Ahorrad energía.	Copy. Save that power.	
+brakes	on	auto	radio	off	Frenos activados.	Brakes engaged.	Recibido, frenos activados.	Copy, brakes engaged.	
+brakes	on	auto	radio	off	Aplicando los frenos.	Applying brakes.	Recibido. Frenad con cuidado.	Copy. Brake gently.	
+brakes	on	auto	radio	off	Estamos frenando.	Slowing us down.	Recibido, vemos bajar la velocidad.	Copy, we see the speed coming down.	
+brakes	off	auto	radio	off	Frenos liberados.	Brakes released.	Recibido, frenos liberados.	Copy, brakes released.	
+brakes	off	auto	radio	off	Podemos rodar libremente.	We're free to roll.	Recibido, podéis rodar.	Copy, you are free to roll.	
+rcs	on	auto	radio	off	Sistema de control de reacción activado.	Reaction control system enabled.	Recibido, control de reacción activado.	Copy, reaction control enabled.	
+rcs	on	auto	radio	off	El RCS está en línea.	RCS is online.	Confirmamos el RCS en línea.	We confirm RCS online.	
+rcs	on	auto	radio	off	Propulsores de maniobra listos.	Maneuvering thrusters ready.	Recibido. Vigilad el combustible.	Copy. Watch your propellant.	
+rcs	off	auto	radio	off	RCS desactivado.	RCS disabled.	Recibido, RCS desactivado.	Copy, RCS disabled.	
+rcs	off	auto	radio	off	Propulsores de maniobra fuera de línea.	Maneuvering thrusters offline.	Confirmamos los propulsores fuera de línea.	We confirm thrusters offline.	
+sas	on	auto	radio	off	Asistencia de estabilidad activada.	Stability assistance engaged.	Recibido, estabilidad activada.	Copy, stability engaged.	
+sas	on	auto	radio	off	SAS activado.	SAS enabled.	Recibido, SAS activado.	Copy, SAS enabled.	
+sas	on	auto	radio	off	Control de actitud activo.	Attitude control active.	Confirmamos el control de actitud.	We confirm attitude control.	
+sas	off	auto	radio	off	Asistencia de estabilidad desactivada.	Stability assistance disengaged.	Recibido. Tenéis el control manual.	Copy. You have manual control.	
+sas	off	auto	radio	off	SAS desactivado.	SAS disabled.	Recibido, SAS desactivado.	Copy, SAS disabled.	
+custom	any	auto	radio	off	Iniciando el procedimiento.	Initiating procedure.			
+custom	any	auto	radio	off	Sistemas activados.	Systems activated.			
+custom	any	auto	radio	off	Comenzando las operaciones.	Beginning operations.			
+custom	any	auto	radio	off	Ejecutando la orden.	Executing command.			
+custom	any	auto	radio	off	Configuración actualizada.	Configuration updated.			
+custom	any	auto	radio	off	Procedimiento completado.	Procedure complete.			
+custom	any	auto	radio	off	Sistemas en espera.	Systems standing by.			
+custom	any	auto	radio	off	Recibido.	Acknowledged.			
+custom	any	auto	radio	off	Cambiando la configuración.	Switching configuration.			
+custom	any	auto	radio	off	Operación confirmada.	Operation confirmed.			
+reply	any	mc	radio	off	Recibido.	Copy that.			
+reply	any	mc	radio	off	Entendido.	Understood.			
+reply	any	mc	radio	off	Confirmado.	Confirmed.			
+reply	any	mc	radio	off	Control de Misión recibe.	Mission Control copies.			
+reply	any	mc	radio	off	Recibido, lo vemos aquí.	Copy, we see it here.			
+reply	any	mc	radio	off	Recibido. Continuad.	Roger. Carry on.			
+# speaker probe: a beep of a probe core, which has no kerbal to speak. beep is the mood, english the subtitle [beeps ...] with 1 to 3 lowercase words.									
+# A group can have more than one beep, one is picked at random. default works like for a voiceline, and a custom row is a preset.									
+# reply_spanish and reply_english: what Mission Control answers to the beep. Empty: one of the reply rows.									
+abort	any	probe	radio	on		[beeps in alarm]	¡Aborto confirmado! ¡Equipos de rescate en camino!	Abort confirmed! Recovery teams are on their way!	scared
+gear	on	probe	radio	on		[beeps gear down]	Recibido, tren desplegado.	Copy, gear deployed.	happy
+gear	off	probe	radio	on		[beeps gear up]	Recibido, tren recogido.	Copy, gear retracted.	proud
+lights	on	probe	radio	on		[beeps lights on]	Recibido, luces activadas.	Copy, lights activated.	happy
+lights	off	probe	radio	on		[beeps lights off]	Recibido, luces apagadas.	Copy, lights off.	sleepy
+brakes	on	probe	radio	off		[beeps brakes on]	Recibido, frenos activados.	Copy, brakes engaged.	proud
+brakes	off	probe	radio	off		[beeps brakes off]	Recibido, frenos liberados.	Copy, brakes released.	happy
+rcs	on	probe	radio	off		[beeps thrusters ready]	Recibido, control de reacción activado.	Copy, reaction control enabled.	proud
+rcs	off	probe	radio	off		[beeps thrusters off]	Recibido, RCS desactivado.	Copy, RCS disabled.	sleepy
+sas	on	probe	radio	off		[beeps holding steady]	Recibido, estabilidad activada.	Copy, stability engaged.	happy
+sas	off	probe	radio	off		[beeps letting go]	Recibido, SAS desactivado.	Copy, SAS disabled.	bored
+custom	any	probe	radio	off		[beeps acknowledged]			happy
+custom	any	probe	radio	off		[beeps working]			curious
+custom	any	probe	radio	off		[beeps done]			proud
+custom	any	probe	radio	off		[beeps standing by]			bored

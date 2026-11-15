@@ -18,6 +18,10 @@ namespace Lonapse
         readonly Dictionary<string, Dictionary<string, double>> probeMeasurements = new Dictionary<string, Dictionary<string, double>>();
         readonly Dictionary<string, double> receivedPoints = new Dictionary<string, double>();
         bool carrierRunning;
+        float probeCalmSince = -1f;   // clock when the probe stopped being tense, -1 while tense
+        float probeReliefTryAt = -1000f;
+        const float ProbeReliefCalm = 6f;     // seconds of calm before Mission Control says it is over
+        const float ProbeReliefRetry = 5f;    // a relief that could not play tries again after this
         readonly HashSet<string> sessionFacts = new HashSet<string>();
 
         string Fact(string key) { Vessel v = ActiveVessel; return (v != null ? v.id.ToString() : "none") + ":" + key; }
@@ -36,7 +40,9 @@ namespace Lonapse
             double ec = ResourcePercent(v, "ElectricCharge");
             if (ec < 15) { Remember("low-power"); Forget("power-recovered"); }
             if (!ProbeLink) { Remember("out-of-contact"); Forget("contact-returned"); }
-            if (ProbeTense) { Remember("stressed"); Forget("relieved"); }
+            if (ProbeTense) { Remember("stressed"); Forget("relieved"); probeCalmSince = -1f; }
+            else if (probeCalmSince < 0f) probeCalmSince = clock;
+            TryProbeRelief();
             FlushProbeReceipts();
             if (pendingProbeScience != null && clock - pendingProbeScienceAt > 30f) pendingProbeScience = null;
             if (pendingProbeScience != null && AirFree && !probeContextPending)
@@ -46,6 +52,24 @@ namespace Lonapse
                 try { ProbeScience(batch.subjects[0], batch.amounts[0], batch.body, batch); }
                 finally { sciSentNow = previous; }
             }
+        }
+
+        /// <summary>The stress is over: Mission Control tells the probe it settled down and the probe beeps back
+        /// (probe.relief in Phrases/Probe/reports.tsv). Once per tense spell, after a few calm seconds.</summary>
+        void TryProbeRelief()
+        {
+            if (probeCalmSince < 0f || clock - probeCalmSince < ProbeReliefCalm || clock - probeReliefTryAt < ProbeReliefRetry) return;
+            if (!host.settings.runtimeReports || !host.settings.probeStressTalk || !Known("stressed") || Known("relieved")) return;
+            if (!AirFree || probeContextPending) return;
+            probeReliefTryAt = clock;
+            Vessel v = ActiveVessel;
+            if (v == null) return;
+            var nums = new Dictionary<string, double>(); var names = new Dictionary<string, string[]>();
+            CollectValues(v, SituationOf(v) ?? "other", nums, names);
+            names["probe"] = new[] { RuntimeSpeech.Respell(host.ProbeDisplayName), host.ProbeDisplayName };
+            if (ContextExchange("relief", "Todo más tranquilo, {probe}. Buen trabajo.", "Things have settled down, {probe}. Good work.",
+                    ProbeContext.Mood("relief"), nums, names, false, null, null, null, () => !ProbeTense, () => Remember("relieved")))
+                Log.Info("Probe relief exchange queued");
         }
 
         void Forget(string key)
@@ -62,6 +86,14 @@ namespace Lonapse
 
         // Render all speech before starting a turn. Never strand a beep awaiting a slow synthesis job.
         // Guard against vessel switches, changed ModuleLonapse selection and stale measurements.
+        /// <summary>Topics that still talk in a serious phase (launch, ascent, reentry, descent): stress, spin and
+        /// power, the science the player just ran and the relief when the stress is over.</summary>
+        static bool SeriousPhaseTopic(string topic, bool stressTalk)
+        {
+            return stressTalk || topic == "spin" || topic == "power" || topic == "relief"
+                || topic.StartsWith("science", StringComparison.Ordinal);
+        }
+
         bool ContextExchange(string topic, string es, string en, string mood,
             Dictionary<string, double> nums, Dictionary<string, string[]> names, bool hail,
             string followEs = null, string followEn = null, KerbalVoice crew = null,
@@ -74,7 +106,7 @@ namespace Lonapse
             if (!RuntimeOn || probeContextPending || (stressTalk
                 ? !probeRepeat.Allowed(stressId, ProbeRules.StressEvent, stressCause, clock, Tu.causeRepeatGap, Tu.calmRepeatGap)
                 : !TopicReady(topic)) || Somber || !host.CanStartAudio
-                || ProbeAsleep || (cabin ? !ProbeCrewPossible : !ProbeLink) || count > 0 || Holding || FlightPhase.IsSerious(CurrentPhase) && !stressTalk && topic != "spin" && topic != "power") return false;
+                || ProbeAsleep || (cabin ? !ProbeCrewPossible : !ProbeLink) || count > 0 || Holding || FlightPhase.IsSerious(CurrentPhase) && !SeriousPhaseTopic(topic, stressTalk)) return false;
             if (!cabin && !host.settings.radioEnabled) return false;
 
             // Mods can specialize contextual lines through the existing runtime/event format.
@@ -91,8 +123,10 @@ namespace Lonapse
                 // A mod's lines and exact lineset checks win over generic shipped wording.
                 var modded = overrides.FindAll(t => PhraseClips.ModOf(t.Where) != null);
                 if (modded.Count > 0) overrides = modded;
+                // A core's own lines win over lines for any core half the time, so the lines about one experiment
+                // or situation still play for a stock core that has its own lines. A mod's core lines always win.
                 var specific = overrides.FindAll(t => t.Checks.Exists(c => c.Key == "x_core_" + Core));
-                if (specific.Count > 0) overrides = specific;
+                if (specific.Count > 0 && (modded.Count > 0 || rng.NextDouble() < 0.5)) overrides = specific;
                 overrides.Sort((a, b) => Mem.LastSeq(a.Id).CompareTo(Mem.LastSeq(b.Id)));
                 RuntimeTemplate replacement = overrides[0];
                 authoredScene = replacement.ProbeLines != null ? replacement : null;
@@ -179,7 +213,7 @@ namespace Lonapse
                         Enqueue(UttKind.IntercomClick, null, 0.2f, 0f, null);
                         Utterance u = Enqueue(UttKind.IntercomLine, null, 0.04f, 0f, crew); if (u != null) u.entry = e;
                     }
-                    else { Utterance u = Enqueue(cabin ? UttKind.CabinBeep : UttKind.ProbeBeep, null, hail ? 0.2f : 0.4f + (cabin ? 0f : host.LightDelay), 0f, null); if (u != null) u.entry = e; }
+                    else { Utterance u = Enqueue(cabin ? UttKind.CabinBeep : UttKind.ProbeBeep, null, hail ? 0.2f : 0.4f, 0f, null); if (u != null) u.entry = e; }
                 }
                 if (cabin) Enqueue(UttKind.IntercomClick, null, 0.1f, 0f, null);
                 Log.Info("Runtime probe exchange " + topic + " (" + band + ", core " + core + ") queued");
@@ -385,8 +419,8 @@ namespace Lonapse
             var snapshot = new Dictionary<string, double>();
             foreach (string key in new[] { "temp_c", "press_kpa", "grav_g" }) { double value; if (nums.TryGetValue(key, out value)) snapshot[key] = value; }
             if (probeMeasurements.Count < 256 || probeMeasurements.ContainsKey(subject)) probeMeasurements[subject] = snapshot;
-            double pts, left; bool first;
-            if (SciencePoints(subject, amount, out pts, out left, out first)) receivedPoints[subject] = pts;
+            double pts, left; bool first, fresh;
+            if (SciencePointsAtRun(subject, amount, out pts, out left, out first, out fresh)) receivedPoints[subject] = pts;
         }
 
         void StartProbeCarrier()

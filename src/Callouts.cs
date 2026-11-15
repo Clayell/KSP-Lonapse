@@ -8,6 +8,17 @@ namespace Lonapse
 {
     public enum ChuteCallout { None, Semi, Full }
 
+    public static class ChuteNames
+    {
+        /// <summary>A drogue chute by its part name or title: the stock radialDrogue and parachuteDrogue, and mod parts
+        /// with drogue in the name or title (RealChute, Kerbalism ...).</summary>
+        public static bool IsDrogue(string name, string title)
+        {
+            return (name != null && name.IndexOf("drogue", System.StringComparison.OrdinalIgnoreCase) >= 0)
+                   || (title != null && title.IndexOf("drogue", System.StringComparison.OrdinalIgnoreCase) >= 0);
+        }
+    }
+
     public class CalloutGate
     {
         public float lastCallout = -999f;    // any one-word callout (stage or parachute)
@@ -82,10 +93,10 @@ namespace Lonapse
             }
         }
 
-        /// <summary>Counts transitions into SEMIDEPLOYED and into DEPLOYED since the last poll.</summary>
-        public void Poll(Vessel v, out int semi, out int full)
+        /// <summary>Counts transitions into SEMIDEPLOYED and DEPLOYED, separating stock drogue parts.</summary>
+        public void Poll(Vessel v, out int semi, out int full, out int drogue)
         {
-            semi = 0; full = 0;
+            semi = 0; full = 0; drogue = 0;
             if (dirty || !ReferenceEquals(v, vessel)) { Rebuild(v); return; }
             for (int i = 0; i < chutes.Count; i++)
             {
@@ -94,8 +105,15 @@ namespace Lonapse
                 ModuleParachute.deploymentStates now = c.deploymentState, before = states[i];
                 if (now == before) continue;
                 states[i] = now;
-                if (now == ModuleParachute.deploymentStates.SEMIDEPLOYED) semi++;
-                else if (now == ModuleParachute.deploymentStates.DEPLOYED) full++;
+                string name = c.part != null && c.part.partInfo != null ? c.part.partInfo.name : null;
+                string title = c.part != null && c.part.partInfo != null ? c.part.partInfo.title : null;
+                bool isDrogue = ChuteNames.IsDrogue(name, title);
+                if (now == ModuleParachute.deploymentStates.SEMIDEPLOYED)
+                {
+                    if (isDrogue) drogue++;
+                    else semi++;
+                }
+                else if (now == ModuleParachute.deploymentStates.DEPLOYED && !isDrogue) full++;
             }
         }
     }

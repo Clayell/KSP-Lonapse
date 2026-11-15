@@ -18,3 +18,6 @@ GameData/Lonapse/PluginData/
 
 # Python validation helpers
 tools/__pycache__/
+
+# Local agent instructions
+AGENTS.md

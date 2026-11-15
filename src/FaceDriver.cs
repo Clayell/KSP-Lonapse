@@ -350,7 +350,9 @@ namespace Lonapse
                 f.faceStress = FaceMath.Follow(f.faceStress, f.stress, dt, 1.5f);
                 f.badass = kv != null && kv.BadassEffective;
                 f.tenseAt = kv != null ? kv.tenseAt : 0.3f;
-                f.panicAt = kv != null ? kv.PanicNow : 0.7f;
+                // the own panicAt, not the escalated one: escalation keeps panic lines from repeating, the face should
+                // not look calmer for it
+                f.panicAt = kv != null ? kv.panicAt : 0.7f;
                 f.moodW = FaceMath.Ramp(f.moodW, engaged || test, dt, MoodRise, MoodFall);
                 if (test) f.moodTarget = testMood; // the fade after the test starts from the last test value
             }
@@ -382,7 +384,8 @@ namespace Lonapse
                     mood = FaceMath.FaceMood(f.moodTarget, lw, stockMood, f.faceStress, f.tenseAt, f.panicAt);
                     if (lw <= 0f && Math.Abs(mood - stockMood) < 1e-4f
                         && stockMood >= FaceMath.LimitFear(-1f, f.calmStress)) continue;
-                    w = exprWeight;
+                    // under stress the stock face (a grin at speed and G) no longer waters the fear down
+                    w = FaceMath.StressWeight(exprWeight, f.faceStress, f.tenseAt, f.panicAt);
                 }
                 if (w <= 0f) continue;
                 f.lastExpr = FaceMath.Blend(f.kes.expression, mood, w, exprSign);
@@ -905,11 +908,14 @@ namespace Lonapse
             overrideOk = overrideLost = 0;
             foreach (Face f in faces.Values)
             {
-                if (!f.speaking && !f.listening && f.moodW <= 0f && f.yaw == 0f && !test) continue;
+                bool stressed = f.faceStress > f.tenseAt;
+                if (!f.speaking && !f.listening && f.moodW <= 0f && f.yaw == 0f && !stressed && !test) continue;
                 sb.Append(" | ").Append(f.name).Append(f.eva ? " EVA" : " IVA")
                   .Append(f.speaking ? " speaks" : (f.listening ? " listens" : ""))
                   .Append(" mood ").Append(f.moodTarget.ToString("0.00"))
                   .Append(" w ").Append(f.moodW.ToString("0.00"));
+                if (stressed) sb.Append(" sk ").Append(f.faceStress.ToString("0.00")).Append(" cap ")
+                                .Append(FaceMath.StressCap(f.faceStress, f.tenseAt, f.panicAt).ToString("0.00"));
                 if (f.exprWritten && f.kes != null)
                 {
                     sb.Append(" expr ").Append(f.kes.expression.ToString("0.00")).Append("->").Append(f.lastExpr.ToString("0.00"));

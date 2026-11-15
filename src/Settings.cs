@@ -50,7 +50,7 @@ namespace Lonapse
         public float warpRateGain = 0.4f, warpRateMax = 2.5f, warpPitchGain = 0.04f, warpPitchMax = 1.18f;
         public float stationRateFactor = 0.5f, stationMcFactor = 1.0f, stationCalmBias = 0.6f, stationPingFactor = 2.0f;
         // periodic MC-initiated "station, Houston" exchange on stations and bases
-        public float stationMcMin = 120f, stationMcMax = 120f;
+        public float stationMcMin = 60f, stationMcMax = 60f;
 
         // --- Phase 2: crew intercom chats ---
         // intercom at stress 0: 60 s everywhere. The station and quiet coast boosts are 1 now, they were for the
@@ -72,9 +72,10 @@ namespace Lonapse
         public float reliefHoldoff = 8f;
 
         // --- Scheduler ---
-        public float tQuiet = 110f, tManic = 1.0f, quietBand = 0.15f, burstBand = 0.6f;
+        public float tQuiet = 60f, tManic = 1.0f, quietBand = 0.15f, burstBand = 0.6f;
         // crew delivery under stress: extra pitch at stress 1 in semitones, total pitch cap, clip truncation, overlap
         public float crewStressSemitones = 0f, crewPitchMax = 1.12f, truncStart = 0.85f, truncMinFrac = 0.8f, overlapMax = 0.35f;
+        public float crewPlaybackSpeed = 1f, crewGritMix = 1f, crewWobbleMix = 1f;
         public float mcTenseLo = 0.20f, mcTenseHi = 0.45f;
 
         // --- Voice channels ---
@@ -102,7 +103,7 @@ namespace Lonapse
         // Throttle callouts
         public float throttleFullAt = 0.98f, throttleCutAt = 0.05f, throttleMinGap = 5f;
         // Pitch factor per gender
-        public float genderPitchFemale = 1.06f, genderPitchMale = 0.96f;
+        public float genderPitchFemale = DcMath.GenderPitchFemale, genderPitchMale = DcMath.GenderPitchMale;
         // Launch cap on the panic band (0 or 1) and altitude where it stops
         public float launchCap = 1f, launchCapAlt = 10000f;
         // Panic pacing and escalation
@@ -125,8 +126,9 @@ namespace Lonapse
         // volume of the radio key-up and key-down sound (desk click or headset squelch)
         public float radioKeyVolume = 0.7f;
         // light delay (MC answers later far from Kerbin), touchdown ambience level
-        // light delay (at most 10 s): about 0.9 s at the Mun, 2 s at Minmus, 8 to 10 s at Duna and beyond
-        public float lightDelayMax = 10.0f, lightDelayScale = 2.6f;
+        // longest light delay, reached near the outer planets (DcMath.LightDelay). At 10 s: about 0.9 s at the Mun,
+        // 2 s at Minmus, 8 s at Duna
+        public float lightDelayMax = 10.0f;
         // master alarm: very quiet, slow in and out, so it stays in the background. Only at very high vessel stress.
         public float alarmVolume = 0.12f, alarmFadeIn = 2.5f, alarmFadeOut = 3f, alarmHold = 4f, alarmStress = 0.9f;
         // a stress cause (q, spin, heat, ...) gets its own lines at most once per this many seconds, at any radio amount
@@ -216,7 +218,7 @@ namespace Lonapse
         public static readonly string[] SignedFields = { "faceExpressionSign" };
 
         /// <summary>Schema version of the saved TUNING node. Bump when defaults of existing fields change.</summary>
-        public const int CurrentVersion = 16;
+        public const int CurrentVersion = 19;
 
         /// <summary>
         /// Fields whose defaults changed in version 3. A file written by an older version gets these reset to
@@ -253,8 +255,13 @@ namespace Lonapse
             stationMcMin = DcMath.Clamp(stationMcMin, 15f, 180f);
             stationMcMax = Math.Max(stationMcMin, DcMath.Clamp(stationMcMax, 15f, 180f));
             if (dockCloseMin < 3f) dockCloseMin = 3f;
-            crewStressSemitones = DcMath.Clamp(crewStressSemitones, 0f, 12f);
-            crewPitchMax = DcMath.Clamp(crewPitchMax, 0.8f, 2f);
+            crewStressSemitones = DcMath.Clamp(DcMath.Finite(crewStressSemitones), 0f, 12f);
+            // under the top of the crew spread the highest kerbals would all clamp to one pitch
+            crewPitchMax = DcMath.Clamp(DcMath.Finite(crewPitchMax), DcMath.CrewSpreadMax, 2f);
+            crewPlaybackSpeed = DcMath.Clamp(DcMath.Finite(crewPlaybackSpeed), 0.75f, 1.25f);
+            crewGritMix = DcMath.Clamp(DcMath.Finite(crewGritMix), 0f, 2f);
+            crewWobbleMix = DcMath.Clamp(DcMath.Finite(crewWobbleMix), 0f, 2f);
+            crewLpCalm = DcMath.Clamp(DcMath.Finite(crewLpCalm), 1800f, 8000f);
             truncStart = DcMath.Clamp01(truncStart);
             truncMinFrac = DcMath.Clamp(truncMinFrac, 0.2f, 1f);
             overlapMax = DcMath.Clamp01(overlapMax);
@@ -286,8 +293,8 @@ namespace Lonapse
 
             // Ranges per field. Fields without a range here only get the generic checks above.
             calloutHoldPad = DcMath.Clamp(calloutHoldPad, 0f, 2f);
-            genderPitchFemale = DcMath.Clamp(genderPitchFemale, 0.8f, 1.3f);
-            genderPitchMale = DcMath.Clamp(genderPitchMale, 0.8f, 1.3f);
+            genderPitchFemale = DcMath.Clamp(DcMath.Finite(genderPitchFemale, DcMath.GenderPitchFemale), 0.8f, 1.3f);
+            genderPitchMale = DcMath.Clamp(DcMath.Finite(genderPitchMale, DcMath.GenderPitchMale), 0.8f, 1.3f);
             launchCap = launchCap >= 0.5f ? 1f : 0f;
             panicMinGap = DcMath.Clamp(panicMinGap, 2f, 60f);
             panicCooldown = DcMath.Clamp(panicCooldown, 5f, 300f);
@@ -299,8 +306,7 @@ namespace Lonapse
             planRateSec = DcMath.Clamp(planRateSec, 20f, 600f);
             burnWarnSec = DcMath.Clamp(burnWarnSec, 10f, 600f);
             alarmVolume = DcMath.Clamp(alarmVolume, 0f, 0.5f);
-            lightDelayMax = DcMath.Clamp(lightDelayMax, 0f, 10f);
-            lightDelayScale = DcMath.Clamp(lightDelayScale, 0f, 10f);
+            lightDelayMax = DcMath.Clamp(lightDelayMax, 0f, DcMath.LightDelayCeiling);
             alarmFadeIn = DcMath.Clamp(alarmFadeIn, 0.1f, 10f);
             alarmFadeOut = DcMath.Clamp(alarmFadeOut, 0.1f, 10f);
             alarmHold = DcMath.Clamp(alarmHold, 0f, 30f);
@@ -397,6 +403,7 @@ namespace Lonapse
         public float controlVolume = 0.8f;
         public float beepVolume = 0.6f;   // 0..2, above 1 the beeps get extra gain
         public float sfxVolume = 1.0f;          // sound effects of the ship itself (docking), not a radio sound
+        public float blackoutStaticVolume = 0.8f;
         public float staticVolume = 0.5f;           // read from older settings files for migration only
         public float weakSignalVolume = 0.4f;   // extra static, bursts and grit on MC at a weak signal (1 = the old, harsher level)
         public float intercomVolume = 0.8f;
@@ -440,7 +447,7 @@ namespace Lonapse
         public bool countdownAutoStage = false;     // launch countdown: activate the next stage on liftoff
         public bool countdownDown = false;          // count 10 .. 1 instead of 1 .. 10
         public bool rogerBeep = true;               // short beep when the crew lets go of the key
-        public bool lightDelay = true;              // small extra answer delay far from Kerbin (max lightDelayMax s)
+        public bool lightDelay = false;             // MC answers later far from Kerbin (up to lightDelayMax s)
         public bool runtimeVoice = true;            // lines spoken at runtime by Piper (names, bodies, extra rows). On by default
         public bool runtimeReports = true;          // with runtimeVoice: Mission Control reads out real values now and then
         /// <summary>Mod folders (GameData/&lt;Mod&gt;/Lonapse) whose lines the player muted, split by commas.</summary>
@@ -448,6 +455,9 @@ namespace Lonapse
         /// <summary>The Mods tab shows the tools for modders (reload, test, the last events).</summary>
         public bool modTools = false;
         public bool runtimeScience = true;          // with runtimeVoice: science points and contract funds
+        public bool actionVoicelines = true;        // a voiceline when an action group fires (set up in the VAB and SPH)
+        public bool actionVoiceDefaults = true;     // a craft without voicelines of its own uses the built-in ones
+        public float actionVoiceCooldown = 3f;      // s before the same action group speaks again
         public bool signalDropouts = true;          // weak signal: MC lines drop out and crunch
         public bool masterAlarm = true;             // soft caution tone in the background while a kerbal panics
         public bool dockingSfx = true;              // airlock sounds on dock and undock
@@ -485,6 +495,8 @@ namespace Lonapse
         public bool eventPower = true;              // low and restored electric charge
         public bool eventSignal = true;             // signal lost and back
         public bool eventCrewLoss = true;           // a kerbal dies
+        public bool eventVesselLoss = true;         // the active probe crashes (probe mode)
+        public bool welcomeShown = false;           // the first-run note at the Space Center was shown (WelcomeNote)
         public string subtitlePos = "above_navball"; // above_navball (default, at X 0.5 / Y 0.78) | custom | top_left | bottom_left
         public float subtitleX = 0.5f;              // custom: centre of the subtitle column, fraction of the screen width
         public float subtitleY = 0.78f;             // custom: bottom edge of the newest subtitle, fraction of the screen height
@@ -569,7 +581,6 @@ namespace Lonapse
             {
                 // Light delay up to 10 s (was 2 s). Only replace the old defaults.
                 ResetIfOld(reset, "lightDelayMax", 2f, 2f);
-                ResetIfOld(reset, "lightDelayScale", 0.45f, 0.45f);
             }
             if (fromVersion < 6)
             {
@@ -641,6 +652,25 @@ namespace Lonapse
                 cabinThrustVolume = cabinVolume;
                 reset.Add("cabinThrustVolume");
             }
+            if (fromVersion < 17)
+            {
+                ResetIfOld(reset, "tQuiet", 110f, 120f);
+                ResetIfOld(reset, "stationMcMin", 120f, 120f);
+                ResetIfOld(reset, "stationMcMax", 120f, 120f);
+            }
+            if (fromVersion < 18 && masterVolume > 1f)
+            {
+                float old = masterVolume;
+                masterVolume = Math.Min(1f, masterVolume * 0.5f);
+                reset.Add("masterVolume " + old.ToString(CultureInfo.InvariantCulture) + " -> " + masterVolume.ToString(CultureInfo.InvariantCulture));
+            }
+            if (fromVersion < 19 && lightDelay)
+            {
+                // Light delay was on by default and the long waits sounded like a bug. Everyone starts with it off
+                // now. Players who want it can turn it on again in the Crew tab.
+                lightDelay = false;
+                reset.Add("lightDelay on -> off");
+            }
             tuningVersion = Tuning.CurrentVersion;
             return reset;
         }
@@ -659,11 +689,13 @@ namespace Lonapse
 
         public void Clamp()
         {
-            masterVolume = MixMath.ClampVolume(masterVolume);
+            masterVolume = DcMath.Clamp(DcMath.Finite(masterVolume), 0f, 1f);
+            actionVoiceCooldown = DcMath.Clamp(DcMath.Finite(actionVoiceCooldown), 1f, 30f);
             crewVolume = MixMath.ClampVolume(crewVolume);
             controlVolume = MixMath.ClampVolume(controlVolume);
             beepVolume = MixMath.ClampVolume(beepVolume);
             sfxVolume = MixMath.ClampVolume(sfxVolume);
+            blackoutStaticVolume = DcMath.Clamp(DcMath.Finite(blackoutStaticVolume), 0f, 1f);
             staticVolume = DcMath.Clamp(DcMath.Finite(staticVolume), 0f, 1f);
             thudVolume = MixMath.ClampVolume(thudVolume);
             footstepVolume = MixMath.ClampVolume(footstepVolume);
@@ -807,6 +839,7 @@ namespace Lonapse
                 n.TryGetValue("controlVolume", ref s.controlVolume);
                 n.TryGetValue("beepVolume", ref s.beepVolume);
                 n.TryGetValue("sfxVolume", ref s.sfxVolume);
+                n.TryGetValue("blackoutStaticVolume", ref s.blackoutStaticVolume);
                 n.TryGetValue("staticVolume", ref s.staticVolume);
                 n.TryGetValue("hatchVolume", ref s.hatchVolume);
                 n.TryGetValue("footstepVolume", ref s.footstepVolume);
@@ -865,6 +898,9 @@ namespace Lonapse
                 s.runtimeVoice = true; // retained legacy field; all speech now requires runtime synthesis
                 n.TryGetValue("runtimeReports", ref s.runtimeReports);
                 n.TryGetValue("runtimeScience", ref s.runtimeScience);
+                n.TryGetValue("actionVoicelines", ref s.actionVoicelines);
+                n.TryGetValue("actionVoiceDefaults", ref s.actionVoiceDefaults);
+                n.TryGetValue("actionVoiceCooldown", ref s.actionVoiceCooldown);
                 n.TryGetValue("mutedMods", ref s.mutedMods);
                 n.TryGetValue("modTools", ref s.modTools);
                 n.TryGetValue("signalDropouts", ref s.signalDropouts);
@@ -890,6 +926,8 @@ namespace Lonapse
                 n.TryGetValue("eventPower", ref s.eventPower);
                 n.TryGetValue("eventSignal", ref s.eventSignal);
                 n.TryGetValue("eventCrewLoss", ref s.eventCrewLoss);
+                n.TryGetValue("eventVesselLoss", ref s.eventVesselLoss);
+                n.TryGetValue("welcomeShown", ref s.welcomeShown);
                 n.TryGetValue("subtitlePos", ref s.subtitlePos);
                 n.TryGetValue("subtitleX", ref s.subtitleX);
                 n.TryGetValue("subtitleY", ref s.subtitleY);
@@ -977,6 +1015,7 @@ namespace Lonapse
                 n.AddValue("controlVolume", F(controlVolume));
                 n.AddValue("beepVolume", F(beepVolume));
                 n.AddValue("sfxVolume", F(sfxVolume));
+                n.AddValue("blackoutStaticVolume", F(blackoutStaticVolume));
                 n.AddValue("hatchVolume", F(hatchVolume));
                 n.AddValue("footstepVolume", F(footstepVolume));
                 n.AddValue("footstepSfx", footstepSfx);
@@ -1031,6 +1070,9 @@ namespace Lonapse
                 n.AddValue("lightDelay", lightDelay);
                 n.AddValue("runtimeReports", runtimeReports);
                 n.AddValue("runtimeScience", runtimeScience);
+                n.AddValue("actionVoicelines", actionVoicelines);
+                n.AddValue("actionVoiceDefaults", actionVoiceDefaults);
+                n.AddValue("actionVoiceCooldown", F(actionVoiceCooldown));
                 n.AddValue("mutedMods", mutedMods ?? "");
                 n.AddValue("modTools", modTools);
                 n.AddValue("signalDropouts", signalDropouts);
@@ -1056,6 +1098,8 @@ namespace Lonapse
                 n.AddValue("eventPower", eventPower);
                 n.AddValue("eventSignal", eventSignal);
                 n.AddValue("eventCrewLoss", eventCrewLoss);
+                n.AddValue("eventVesselLoss", eventVesselLoss);
+                n.AddValue("welcomeShown", welcomeShown);
                 n.AddValue("subtitlePos", subtitlePos);
                 n.AddValue("subtitleX", F(subtitleX));
                 n.AddValue("subtitleY", F(subtitleY));

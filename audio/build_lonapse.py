@@ -178,13 +178,13 @@ PLACEHOLDER_RE = re.compile(r"\{([^{}]*)\}")
 SLOT_RE = re.compile(r"^([a-z_]+)(?::([1-9]))?$")
 # The slot catalogue. Same lists as Slots.Numbers, Slots.Names and Slots.Persons in src/Slots.cs (the tests
 # compare them). Every one of them is reserved: it cannot be a pool name.
-NUMBER_SLOTS = ["alt_km", "pe_km", "ap_km", "speed", "fuel", "day", "sci", "funds",
+NUMBER_SLOTS = ["alt_km", "climb_ms", "pe_km", "ap_km", "speed", "fuel", "day", "sci", "funds",
                 "inc_deg", "period_min", "t_ap_min", "t_pe_min", "ec", "mono", "parts", "crew", "node_dv", "node_min",
                 "funds_total", "sci_total", "rep", "contracts", "dist_m", "close_ms", "height_m", "vspeed_ms",
                 "at_home", "flight_no", "missions", "stars", "visits", "landings", "in_warp", "node_h", "soi_h",
                 "sci_left", "sci_first", "con_sci", "con_rep", "sunrises", "eva_mins", "ship_m", "jet", "on_eva", "pair_m",
                 "link", "apart", "a_eva", "b_eva", "has_solar", "has_rcs", "has_legs", "is_tourist",
-                "temp_c", "press_kpa", "grav_g", "sci_flight", "exp_runs", "exp_count", "data_sent", "resource_pct", "splashed", "eva_thrusting", "eva_grounded"]
+                "temp_c", "press_kpa", "grav_g", "sci_flight", "exp_runs", "exp_count", "data_sent", "resource_pct", "splashed", "eva_thrusting", "eva_grounded", "sci_new", "sci_sit"]
 NAME_SLOTS = ["here", "vessel", "body", "exp", "target", "next", "biome", "flag", "my_ship", "their_ship", "device", "contract", "exp_list", "probe", "resource"]
 RUNTIME_PERSONS = ["other", "self", "kerbal"]
 # On every flight, also without the runtime voice (Slots.Flight)
@@ -238,28 +238,33 @@ EXPLOSION_RE = re.compile(r"\b(?:explo(?!r)|boom|blew\s+(?:up|apart|out|off)\b|b
                           re.IGNORECASE)
 LONAPSE_COLUMN = "lonapse_text"
 FOLDER_COLUMN = "folder"
-EVENTS = ["chatter", "staging", "chute_semi", "chute_full", "throttle_full", "throttle_cut",
+EVENTS = ["chatter", "staging", "chute_semi", "chute_drogue", "chute_full", "blackout_enter", "throttle_full", "throttle_cut",
           "dock_approach", "dock_close", "dock_hard", "docked", "touchdown", "splashdown", "relief",
           "plan_node", "burn_soon", "station_check", "eva_check", "eva_fall", "countdown",
+          # the launch pad, the liftoff, a stable orbit, low fuel in the last stage, the first heat of an
+          # atmospheric entry and the vessel at rest on the home body after a trip to space
+          "launch_pad", "liftoff", "orbit_reached", "fuel_low", "reentry_heat", "welcome_home",
           # game events
-          "soi_enter", "science", "part_lost", "power_low", "power_ok", "signal_lost", "signal_back", "crew_lost",
+          "soi_enter", "science", "part_lost", "power_low", "power_ok", "signal_lost", "signal_back", "crew_lost", "vessel_lost",
           # probe mode
           "probe_chat", "probe_sleepy",
           # probe mode: the probe calls Mission Control first
           "probe_hail", "probe_stress", "probe_say_again", "probe_milestone", "probe_rover", "probe_data",
+          # probe mode: the probe beeps to itself in a reentry blackout
+          "probe_blackout",
           # Probe and crew on one vessel, in the cabin
           "probe_crew"]
 # Newer events: allowed, but not yet held to MIN_PER_EVENT. A shortfall is a warning.
-NEW_EVENTS = ["soi_enter", "science", "part_lost", "power_low", "power_ok", "signal_lost", "signal_back", "crew_lost",
+NEW_EVENTS = ["launch_pad", "liftoff", "orbit_reached", "fuel_low", "reentry_heat", "welcome_home", "vessel_lost", "soi_enter", "science", "part_lost", "power_low", "power_ok", "signal_lost", "signal_back", "crew_lost",
               "probe_chat", "probe_sleepy", "probe_hail", "probe_stress", "probe_say_again", "probe_milestone",
-              "probe_rover", "probe_data", "probe_crew"]
+              "probe_rover", "probe_data", "probe_blackout", "probe_crew"]
 # Optional events: no minimum at all, not even a warning.
 OPTIONAL_EVENTS = []
 # Same as PhraseTable.ProbeEvents and PhraseTable.ProbeVariantEvents in C#. Probe events only play in probe
 # mode and have no crew rows. The variant events are existing events whose probe scenes carry a core or a probe-mode
 # role (is_probe_scene).
 PROBE_EVENTS = ["probe_chat", "probe_sleepy", "probe_hail", "probe_stress", "probe_say_again", "probe_milestone",
-                "probe_rover", "probe_data"]
+                "probe_rover", "probe_data", "probe_blackout"]
 # A crewed vessel with a probe core. Probe and crew rows, no mc rows, never in a serious phase. Same as
 # PhraseTable.ProbeCrewEvent in C#.
 PROBE_CREW_EVENT = "probe_crew"

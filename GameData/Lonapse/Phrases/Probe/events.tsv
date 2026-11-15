@@ -250,3 +250,37 @@ pe_pn_okto_a_1__v02	pe_pn_okto_a_1	pe_pn_okto_a	1	mission_control	flight.plan_no
 pe_pn_okto_b_1__v02	pe_pn_okto_b_1	pe_pn_okto_b	1	mission_control	flight.plan_node	radio				0	{probe}, la página de maniobra está lista para una revisión cuidadosa.	{probe}, the maneuver page is ready for a careful review.	none	chatter	m	any	any	any	any	any	okto						
 pe_bn_any_a_1__v02	pe_bn_any_a_1	pe_bn_any_a	1	mission_control	flight.burn_soon	radio				0	Da prioridad al encendido previsto sobre los pitidos de celebración, {probe}.	Keep the planned burn ahead of the celebratory beeping, {probe}.	tense	warning	m	any	any	any	any	any	any						
 pe_bn_any_a_1__v03	pe_bn_any_a_1	pe_bn_any_a	1	mission_control	flight.burn_soon	radio				0	{probe}, la próxima cita del motor se acerca.	{probe}, the next engine appointment is getting close.	tense	warning	m	any	any	any	any	any	any						
+pe_blackout_any_01_1	pe_blackout_any_01_1	pe_blackout_any_01	1	probe	flight.probe_blackout	radio				0		[beeps nervously]	none	chatter	both	any	any	any	any	any	any	scared					
+pe_blackout_any_02_1	pe_blackout_any_02_1	pe_blackout_any_02	1	probe	flight.probe_blackout	radio				0		[beeps very nervously]	none	chatter	both	any	any	any	any	any	any	scared					
+pe_blackout_any_03_1	pe_blackout_any_03_1	pe_blackout_any_03	1	probe	flight.probe_blackout	radio				0		[beeps about the heat]	none	chatter	both	any	any	any	any	any	any	scared					
+pe_blackout_any_04_1	pe_blackout_any_04_1	pe_blackout_any_04	1	probe	flight.probe_blackout	radio				0		[beeps rather hotly]	none	chatter	both	any	any	any	any	any	any	offended					
+pe_blackout_any_05_1	pe_blackout_any_05_1	pe_blackout_any_05	1	probe	flight.probe_blackout	radio				0		[beeps at the plasma]	none	chatter	both	any	any	any	any	any	any	scared					
+pe_blackout_any_06_1	pe_blackout_any_06_1	pe_blackout_any_06	1	probe	flight.probe_blackout	radio				0		[beeps through the static]	none	chatter	both	any	any	any	any	any	any	scared					
+pe_blackout_any_07_1	pe_blackout_any_07_1	pe_blackout_any_07	1	probe	flight.probe_blackout	radio				0		[beeps into the void]	none	chatter	both	any	any	any	any	any	any	scared					
+pe_blackout_any_08_1	pe_blackout_any_08_1	pe_blackout_any_08	1	probe	flight.probe_blackout	radio				0		[beeps a shaky tune]	none	chatter	both	any	any	any	any	any	any	scared					
+pe_blackout_any_09_1	pe_blackout_any_09_1	pe_blackout_any_09	1	probe	flight.probe_blackout	radio				0		[beeps for its heatshield]	none	chatter	both	any	any	any	any	any	any	scared					
+pe_blackout_any_10_1	pe_blackout_any_10_1	pe_blackout_any_10	1	probe	flight.probe_blackout	radio				0		[beeps the temperature]	none	chatter	both	any	any	any	any	any	any	scared					
+pe_blackout_any_11_1	pe_blackout_any_11_1	pe_blackout_any_11	1	probe	flight.probe_blackout	radio				0		[beeps a sizzling complaint]	none	chatter	both	any	any	any	any	any	any	offended					
+pe_blackout_any_12_1	pe_blackout_any_12_1	pe_blackout_any_12	1	probe	flight.probe_blackout	radio				0		[beeps crossly at physics]	none	chatter	both	any	any	any	any	any	any	offended					
+pe_blackout_any_13_1	pe_blackout_any_13_1	pe_blackout_any_13	1	probe	flight.probe_blackout	radio				0		[beeps at the glow]	none	chatter	both	any	any	any	any	any	any	curious					
+pe_blackout_any_14_1	pe_blackout_any_14_1	pe_blackout_any_14	1	probe	flight.probe_blackout	radio				0		[beeps is anyone there]	none	chatter	both	any	any	any	any	any	any	scared					
+pe_blackout_any_15_1	pe_blackout_any_15_1	pe_blackout_any_15	1	probe	flight.probe_blackout	radio				0		[beeps very quickly]	none	chatter	both	any	any	any	any	any	any	scared					
+pe_blackout_any_16_1	pe_blackout_any_16_1	pe_blackout_any_16	1	probe	flight.probe_blackout	radio				0		[beeps to itself]	none	chatter	both	any	any	any	any	any	any	scared					
+pe_blackout_any_17_1	pe_blackout_any_17_1	pe_blackout_any_17	1	probe	flight.probe_blackout	radio				0		[beeps hold together]	none	chatter	both	any	any	any	any	any	any	scared					
+pe_blackout_any_18_1	pe_blackout_any_18_1	pe_blackout_any_18	1	probe	flight.probe_blackout	radio				0		[beeps bravely]	none	chatter	both	any	any	any	any	any	any	proud					
+pe_blackout_any_19_1	pe_blackout_any_19_1	pe_blackout_any_19	1	probe	flight.probe_blackout	radio				0		[beeps a hot hum]	none	chatter	both	any	any	any	any	any	any	scared					
+pe_blackout_any_20_1	pe_blackout_any_20_1	pe_blackout_any_20	1	probe	flight.probe_blackout	radio				0		[beeps about the shaking]	none	chatter	both	any	any	any	any	any	any	scared					
+pe_blackout_hecs_01_1	pe_blackout_hecs_01_1	pe_blackout_hecs_01	1	probe	flight.probe_blackout	radio				0		[beeps bravely anyway]	none	chatter	both	any	any	any	any	any	hecs	proud					
+pe_blackout_hecs_02_1	pe_blackout_hecs_02_1	pe_blackout_hecs_02	1	probe	flight.probe_blackout	radio				0		[beeps a tiny prayer]	none	chatter	both	any	any	any	any	any	hecs	scared					
+pe_blackout_okto_01_1	pe_blackout_okto_01_1	pe_blackout_okto_01	1	probe	flight.probe_blackout	radio				0		[beeps calmly regardless]	none	chatter	both	any	any	any	any	any	okto	proud					
+pe_blackout_okto_02_1	pe_blackout_okto_02_1	pe_blackout_okto_02	1	probe	flight.probe_blackout	radio				0		[beeps the hull temperature]	none	chatter	both	any	any	any	any	any	okto	curious					
+pe_blackout_rovemate_01_1	pe_blackout_rovemate_01_1	pe_blackout_rovemate_01	1	probe	flight.probe_blackout	radio				0		[beeps like a puppy]	none	chatter	both	any	any	any	any	any	rovemate	scared					
+pe_blackout_rovemate_02_1	pe_blackout_rovemate_02_1	pe_blackout_rovemate_02	1	probe	flight.probe_blackout	radio				0		[beeps and whimpers]	none	chatter	both	any	any	any	any	any	rovemate	scared					
+pe_blackout_snob_01_1	pe_blackout_snob_01_1	pe_blackout_snob_01	1	probe	flight.probe_blackout	radio				0		[beeps about the indignity]	none	chatter	both	any	any	any	any	any	snob	offended					
+pe_blackout_snob_02_1	pe_blackout_snob_02_1	pe_blackout_snob_02	1	probe	flight.probe_blackout	radio				0		[beeps demanding air conditioning]	none	chatter	both	any	any	any	any	any	snob	offended					
+pe_blackout_stayputnik_01_1	pe_blackout_stayputnik_01_1	pe_blackout_stayputnik_01	1	probe	flight.probe_blackout	radio				0		[beeps like old times]	none	chatter	both	any	any	any	any	any	stayputnik	proud					
+pe_blackout_stayputnik_02_1	pe_blackout_stayputnik_02_1	pe_blackout_stayputnik_02	1	probe	flight.probe_blackout	radio				0		[beeps very loudly]	none	chatter	both	any	any	any	any	any	stayputnik	scared					
+pe_blackout_mk2drone_01_1	pe_blackout_mk2drone_01_1	pe_blackout_mk2drone_01	1	probe	flight.probe_blackout	radio				0		[beeps calculating heat]	none	chatter	both	any	any	any	any	any	mk2drone	curious					
+pe_blackout_mpo_01_1	pe_blackout_mpo_01_1	pe_blackout_mpo_01	1	probe	flight.probe_blackout	radio				0		[beeps a long warning]	none	chatter	both	any	any	any	any	any	mpo	scared					
+pe_blackout_mtm_01_1	pe_blackout_mtm_01_1	pe_blackout_mtm_01	1	probe	flight.probe_blackout	radio				0		[beeps about the cargo]	none	chatter	both	any	any	any	any	any	mtm	scared					
+pe_blackout_qbe_01_1	pe_blackout_qbe_01_1	pe_blackout_qbe_01	1	probe	flight.probe_blackout	radio				0		[beeps very small beeps]	none	chatter	both	any	any	any	any	any	qbe	scared					

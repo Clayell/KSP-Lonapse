@@ -459,11 +459,20 @@ namespace Lonapse
             { "mc_panic", new[] { 0.95, 0.3 } }, { "callout", new[] { 1.08, 0.5 } },
         };
         public const double McLivelyTempo = 1.04, McLivelyNoise = 0.80, McLivelyNoiseW = 0.90;
+
+        /// <summary>Every kind KindFor gives: Mission Control calm, tense, panic and callout, and the calm, tense (also
+        /// panic) and callout voice of both genders. Each is one Piper process, all loaded at the save start.</summary>
+        public static readonly string[] Kinds = { "mc", "mc.tense", "mc.mc_panic", "mc.callout", "m", "m.tense", "m.callout",
+                                                  "f", "f.tense", "f.callout" };
         public const double PanicNoise = 0.90, PanicNoiseW = 1.10;
 
         /// <summary>
         /// The kind for one line, like delivery() in build_lonapse.py: "m", "f" or "mc" with the delivery band after a
         /// dot ("m.tense", "mc.mc_panic", "f.callout"). Calm and none give the plain kind.
+        /// Crew panic speaks with the tense process: the same tempo and pitch, only a little more noise. Every kind
+        /// is a Piper process of its own, and with m.panic and f.panic there were 11 crew kinds for
+        /// RuntimeVoice.MaxCrewWorkers (9). A tense flight then stopped one and loaded another, and loading a model
+        /// takes all cores for a moment: the audio cut out.
         /// The countdown has fixed recordings and does not request runtime synthesis.
         /// </summary>
         public static string KindFor(string speaker, string band, string severity, string ev)
@@ -473,7 +482,7 @@ namespace Lonapse
             string b;
             if (severity == "callout") b = "callout";
             else if (band == "panic" && mc) b = "mc_panic";
-            else if (band == "tense" || band == "panic") b = band;
+            else if (band == "tense" || band == "panic") b = "tense";
             else b = "calm";
             return b == "calm" ? speaker : speaker + "." + b;
         }

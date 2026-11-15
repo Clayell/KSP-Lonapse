@@ -4,7 +4,7 @@
 </picture>
 
 [![KSP 1.12.x](https://img.shields.io/badge/KSP-1.12.x-blue)](https://www.kerbalspaceprogram.com/)
-[![Version 0.9.0](https://img.shields.io/badge/version-0.9.0-green)](CHANGELOG.md)
+[![Version 1.0.0](https://img.shields.io/badge/version-1.0.0-green)](CHANGELOG.md)
 [![Code: MIT](https://img.shields.io/badge/code-MIT-lightgrey)](LICENSE)
 [![Audio: CC BY 4.0](https://img.shields.io/badge/audio-CC%20BY%204.0-lightgrey)](LICENSE-CC-BY-4.0)
 [![Runtime voice: GPL-3.0 and others](https://img.shields.io/badge/runtime%20voice-GPL--3.0%20%2B%20MIT%20%2B%20others-lightgrey)](runtime/licenses/README.md)
@@ -28,6 +28,7 @@ with a text to speech voice and pitched up. It sounds like a real language witho
   heat, fuel, a hard landing and so on, and every kerbal reacts in their own way. A brave pilot can stay calm while a
   nervous scientist panics easily.
 - **Callouts.** The crew will call out when staging, parachutes, full throttle or throttle cutoff happens. They will also call out during docking maneuvers or when they do a science experiment.
+- **Mission moments.** Mission Control and the crew talk on the launch pad, right after liftoff, when you reach a stable orbit, when the last stage runs low on fuel, when the heat of an entry builds up and when you are back home after a trip to space. When your probe crashes, Mission Control notices that too.
 - **Cabin intercom.** With two or more kerbals aboard they chat among themselves now and then with some jokes. Jokes about floating around the cabin only come up in space.
 - **The radio sounds like a radio.** Quindar tones on Mission Control, static that follows your CommNet signal (or
   RemoteTech), reentry blackout, a delay on the answers far from Kerbin and dropouts on a weak link. The crew sounds like they are talking through a headset, with a little cabin noise behind the mic. On EVA you hear the short resonance of the helmet. Mission Control has a fuller voice with the quiet control room behind it, and a narrower sound when the link gets weak. You can set the hiss and crackle with "Radio static" in the Sound tab. At 0% the static is silent. This way the radio follows your connection with the KSC.
@@ -56,7 +57,7 @@ with a text to speech voice and pitched up. It sounds like a real language witho
 
 ## Install
 
-1. Download `Lonapse-0.9.0.zip` from the releases page. The `GameData` folder in this repo has the same files, except the runtime voice (`PluginData/Runtime`), which is only in the zip.
+1. Download `Lonapse-1.0.0.zip` from the releases page. The `GameData` folder in this repo has the same files, except the runtime voice (`PluginData/Runtime`), which is only in the zip.
 2. Copy the `GameData/Lonapse` folder into the `GameData` folder of your KSP install.
 
 That's all. Lonapse has no dependencies. The mod is available for install via the CKAN. Additionally, the mod is available on [SpaceDock](https://spacedock.info/mod/4786/Lonapse).
@@ -79,6 +80,49 @@ Hotkeys:
 You can change both keys in the window.
 
 Settings are saved in `GameData/Lonapse/PluginData/settings.cfg`.
+
+## Action group voicelines
+
+Your kerbals and Mission Control can call out action groups. Press the gear key and somebody says "Landing gear
+deployed." in loñapsE, with the subtitle.
+
+Click the antenna button on the toolbar in the VAB or SPH to set it up for the craft you are building.
+
+- Pick an action group. Abort, Gear, Lights, Brakes, RCS, SAS and Custom 1 to 10 are supported.
+- Add as many lines as you like. Each press picks one at random, and never the same line twice in a row.
+- Per line you choose who says it (Mission Control, any kerbal or one kerbal) and how (radio or intercom).
+- Gear, Lights, Brakes, RCS and SAS know on from off, so a line can be for one of the two.
+- Write your own text or choose a preset. Preview plays the line with the voice and the radio sound of a flight.
+- Mission Control replies to every built-in line a kerbal says on the radio. For a custom line you type the reply
+  yourself, leave it empty for a standard "Copy that.", or switch the reply off.
+
+The lines are stored in the craft itself, so they come along when you save, load, launch and quicksave. A craft
+you never set up uses the built-in lines for Abort, Gear and Lights. The built-in lines for Brakes, RCS and SAS
+are there but switched off, because those groups change all the time in a normal flight.
+
+A probe has no kerbal to say a line, so the window has a second tab, Probe beeps. It works the same way as the
+voicelines. Every action group has its own list of beeps and you can add as many as you like, write your own or
+choose a preset, switch one off or delete it. Per beep you choose the mood, the words of the subtitle (like
+"[beeps gear down]") and, for Gear, Lights, Brakes, RCS and SAS, if it is for on, off or both. One of the beeps that
+fit is picked at random. Mission Control can reply to a beep too. You type the reply yourself, leave it empty for a
+standard "Copy that.", or switch the reply off. Preview plays the beep of the probe core on your craft. On a craft
+without crew a beep plays instead of the voicelines. A group without a beep still plays its Mission Control lines.
+A craft you never set up beeps for Abort, Gear and Lights. The built-in beeps for Brakes, RCS and SAS are there but
+switched off.
+
+The Crew tab of the settings window in flight has the switches for this feature and the quiet time per action group.
+
+Good to know:
+
+- The lines need a command pod or probe core on the craft. They are stored in those parts.
+- Type your lines in English. Lonapse puts them into Spanish with its own word list before the voice turns them into
+  loñapsE, and the window shows the Spanish it will say. It goes word by word, so it is rough Spanish. A word
+  it does not know is said as typed, and a name in the middle of a sentence stays a name.
+- A group with nothing bound to it stays silent. RCS and SAS always count, they switch the craft itself.
+- Mission Control only replies when there is a signal, and never to a line on the intercom.
+- A probe never speaks as a kerbal. Mission Control lines still play on a probe when there is a signal.
+- When the kerbal of a line is not aboard, another kerbal says it. Without crew a kerbal line stays silent.
+- The preview has no key clicks and no static. In flight the line gets both.
 
 ## Probe voices
 

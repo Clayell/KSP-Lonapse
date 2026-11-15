@@ -31,6 +31,17 @@ namespace Lonapse
         // power state per vessel, so an EVA and back does not repeat power_low
         private readonly Dictionary<Guid, bool> powerLowById = new Dictionary<Guid, bool>();
 
+        /// <summary>An experiment outside a science batch waits here until the player decided in the results dialog.
+        /// Its line only plays when the data is still aboard or went out by antenna: a reset goo canister or
+        /// materials bay is not a finished experiment.</summary>
+        private struct PendingScience { public string subject, body, bodyKey; public float amount; public double since; }
+        private readonly List<PendingScience> pendingScience = new List<PendingScience>();
+        private readonly HashSet<string> sentSubjects = new HashSet<string>();
+        private double dialogSeenAt = double.NegativeInfinity;
+        /// <summary>Seconds after the experiment, and after the results dialog closed, before the data is checked.
+        /// After DecideMax s with the dialog still open the experiment is checked anyway.</summary>
+        private const double DecideAfter = 1.0, DialogClosedFor = 0.5, DecideMax = 60.0;
+
         public double Now { get { return now; } }
 
         public void Init(LonapseAddon owner)
@@ -39,6 +50,9 @@ namespace Lonapse
             now = 0;
             soi.Reset(); science.Reset(); partLoss.Reset(); power.Reset(); signalWatch.Reset(); crewLoss.Reset();
             powerLowById.Clear();
+            pendingScience.Clear();
+            sentSubjects.Clear();
+            dialogSeenAt = double.NegativeInfinity;
             lastVessel = null;
             if (subscribed) return;
             try
@@ -97,6 +111,7 @@ namespace Lonapse
                 lastPanic = host.roster.AnyPanic;
                 lastPlasma = s.valid && s.inPlasmaStock;
 
+                TickPendingScience(v);
                 EventRequest r;
                 if (science.Tick(now, tu.scienceCooldown, out r))
                 {
@@ -199,29 +214,86 @@ namespace Lonapse
                 if (!Enabled || !host.settings.eventScience || data == null) return;
                 Vessel v = FlightGlobals.ActiveVessel;   // ScienceData carries no vessel: the active one ran it
                 if (v == null) return;
-                Tuning tu = host.settings.tuning;
                 string bodyKey = v.mainBody != null ? FlightPhase.BodyKey(v.mainBody.bodyName) : FlightPhase.GenericBody;
                 // every experiment counts for {sci_flight} and {exp_runs}, also one in a cooldown
                 if (host.director != null) host.director.NoteExperiment(data.subjectID, data.dataAmount);
                 // runtime voice with a link: experiments run close together become one science talk, no cooldown
-                if (host.director != null && host.director.ScienceBatchTakes(data.subjectID, data.dataAmount,
-                                                                              v.mainBody != null ? v.mainBody.bodyName : null)) return;
-                EventRequest r;
-                if (science.OnExperiment(now, data.subjectID, bodyKey, tu.scienceCooldown, tu.scienceTopicCooldown,
-                                         EventWatchers.MaxAgeFor(EventWatchers.Science, tu.eventMaxAge, tu.eventMaxAge), out r, data.dataAmount))
-                {
-                    Log.Info("Event science: " + data.subjectID + " -> topic " + r.topic);
-                    // runtime voice: an EVA experiment, or any without a link, as a chat with the biome and the body
-                    if (host.director != null && host.director.RuntimeScienceTakeover(data.subjectID, data.dataAmount,
-                                                                                       v.mainBody != null ? v.mainBody.bodyName : null)) return;
-                    Send(r);
-                    // experimental runtime voice: sometimes the numbers after the reaction
-                    if (host.director != null)
-                        host.director.RuntimeScience(data.subjectID, data.dataAmount, v.mainBody != null ? v.mainBody.bodyName : null);
-                }
-                else Log.Debug("Science " + data.subjectID + (science.QueuedCount > 0 ? " queued or skipped (" + science.QueuedCount + " waiting)" : " skipped (cooldown)"));
+                string bodyName = v.mainBody != null ? v.mainBody.bodyName : null;
+                if (host.director != null && host.director.ScienceBatchTakes(data.subjectID, data.dataAmount, bodyName)) return;
+                // the rest waits for the results dialog: the player may still reset the data
+                sentSubjects.Remove(data.subjectID);
+                if (pendingScience.Count < 8)
+                    pendingScience.Add(new PendingScience { subject = data.subjectID, body = bodyName, bodyKey = bodyKey, amount = data.dataAmount, since = now });
+                Log.Info("Science " + data.subjectID + " waits for the results dialog");
             }
             catch (Exception e) { Log.Exception("GameEventHub.OnExperimentDeployed", e); }
+        }
+
+        /// <summary>Per Tick: experiments whose results dialog closed. Data still aboard or sent gets its line, data
+        /// that is gone was reset or discarded and gets none.</summary>
+        private void TickPendingScience(Vessel v)
+        {
+            if (pendingScience.Count == 0) return;
+            bool dialog = ResultsDialogOpen;
+            if (dialog) dialogSeenAt = now;
+            for (int i = 0; i < pendingScience.Count; i++)
+            {
+                PendingScience p = pendingScience[i];
+                bool decided = !dialog && now - p.since >= DecideAfter && now - dialogSeenAt >= DialogClosedFor;
+                if (!decided && now - p.since < DecideMax) continue;
+                pendingScience.RemoveAt(i--);
+                if (!DataKept(v, p.subject)) { Log.Info("Science " + p.subject + " was reset, no line about it"); continue; }
+                ExperimentLine(p);
+            }
+        }
+
+        private static bool ResultsDialogOpen
+        {
+            get
+            {
+                try { return KSP.UI.Screens.Flight.Dialogs.ExperimentsResultDialog.Instance != null; }
+                catch (Exception) { return false; }
+            }
+        }
+
+        /// <summary>The data of the subject is aboard the active vessel, went out by antenna, or may be on its way
+        /// (an antenna is sending). True when it cannot be checked.</summary>
+        private bool DataKept(Vessel v, string subject)
+        {
+            if (sentSubjects.Contains(subject)) return true;
+            try
+            {
+                if (v == null) return true;
+                foreach (IScienceDataContainer c in v.FindPartModulesImplementing<IScienceDataContainer>())
+                {
+                    ScienceData[] data = c.GetData();
+                    if (data != null) foreach (ScienceData d in data) if (d != null && d.subjectID == subject) return true;
+                }
+                foreach (IScienceDataTransmitter t in v.FindPartModulesImplementing<IScienceDataTransmitter>())
+                    if (t != null && t.IsBusy()) return true;
+                return false;
+            }
+            catch (Exception e) { Log.Debug("Science data check: " + e.Message); return true; }
+        }
+
+        /// <summary>The line of a finished experiment: the science event (cooldown and queue), a runtime talk or the
+        /// numbers after it.</summary>
+        private void ExperimentLine(PendingScience p)
+        {
+            if (!Enabled || !host.settings.eventScience) return;
+            Tuning tu = host.settings.tuning;
+            EventRequest r;
+            if (science.OnExperiment(now, p.subject, p.bodyKey, tu.scienceCooldown, tu.scienceTopicCooldown,
+                                     EventWatchers.MaxAgeFor(EventWatchers.Science, tu.eventMaxAge, tu.eventMaxAge), out r, p.amount))
+            {
+                Log.Info("Event science: " + p.subject + " -> topic " + r.topic);
+                // runtime voice: an EVA experiment, or any without a link, as a chat with the biome and the body
+                if (host.director != null && host.director.RuntimeScienceTakeover(p.subject, p.amount, p.body)) return;
+                Send(r);
+                // experimental runtime voice: sometimes the numbers after the reaction
+                if (host.director != null) host.director.RuntimeScience(p.subject, p.amount, p.body);
+            }
+            else Log.Debug("Science " + p.subject + (science.QueuedCount > 0 ? " queued or skipped (" + science.QueuedCount + " waiting)" : " skipped (cooldown)"));
         }
 
         /// <summary>Data goes out by antenna: an experiment of the science batch that is no longer aboard was sent,
@@ -231,8 +303,11 @@ namespace Lonapse
             try
             {
                 // only data the active vessel sends: another vessel's antenna says nothing about this batch
-                if (data != null && !aborted && host.director != null && v != null && ReferenceEquals(v, FlightGlobals.ActiveVessel))
-                    host.director.NoteTransmitted(data.subjectID);
+                if (data != null && !aborted && v != null && ReferenceEquals(v, FlightGlobals.ActiveVessel))
+                {
+                    if (sentSubjects.Count < 64) sentSubjects.Add(data.subjectID);
+                    if (host.director != null) host.director.NoteTransmitted(data.subjectID);
+                }
                 if (data != null && aborted && host.director != null && v != null && ReferenceEquals(v, FlightGlobals.ActiveVessel))
                     host.director.ProbeTransmissionAborted(data.subjectID);
             }

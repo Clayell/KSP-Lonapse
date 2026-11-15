@@ -55,6 +55,7 @@ namespace Lonapse
         public double alt;          // m above sea level
         public double atmDepth;     // m, 0 when the body has no atmosphere
         public string phase;        // current FlightPhase, set by the director (not by the sampler)
+        public string classifiedPhase; // underlying flight phase, even during a radio blackout
         // probe mode. Filled by the gate code, not by the sampler. Defaults mean "no probe".
         public string probeCoreKey; // ProbeCores key of the root-most probe core, null when the vessel is not in probe mode
         public bool probeAsleep;    // a probe core reports NotEnoughResources or is hibernating

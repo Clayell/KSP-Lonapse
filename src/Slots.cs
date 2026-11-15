@@ -16,13 +16,13 @@ namespace Lonapse
 {
     public static class Slots
     {
-        public static readonly string[] Numbers = { "alt_km", "pe_km", "ap_km", "speed", "fuel", "day", "sci", "funds",
+        public static readonly string[] Numbers = { "alt_km", "climb_ms", "pe_km", "ap_km", "speed", "fuel", "day", "sci", "funds",
             "inc_deg", "period_min", "t_ap_min", "t_pe_min", "ec", "mono", "parts", "crew", "node_dv", "node_min",
             "funds_total", "sci_total", "rep", "contracts", "dist_m", "close_ms", "height_m", "vspeed_ms",
             "at_home", "flight_no", "missions", "stars", "visits", "landings", "in_warp", "node_h", "soi_h",
             "sci_left", "sci_first", "con_sci", "con_rep", "sunrises", "eva_mins", "ship_m", "jet", "on_eva", "pair_m",
             "link", "apart", "a_eva", "b_eva", "has_solar", "has_rcs", "has_legs", "is_tourist",
-            "temp_c", "press_kpa", "grav_g", "sci_flight", "exp_runs", "exp_count", "data_sent", "resource_pct", "splashed", "eva_thrusting", "eva_grounded" };
+            "temp_c", "press_kpa", "grav_g", "sci_flight", "exp_runs", "exp_count", "data_sent", "resource_pct", "splashed", "eva_thrusting", "eva_grounded", "sci_new", "sci_sit" };
         public static readonly string[] Names = { "here", "vessel", "body", "exp", "target", "next", "biome", "flag", "my_ship", "their_ship", "device", "contract", "exp_list", "probe", "resource" };
         public static readonly string[] Persons = { "other", "self", "kerbal" };
         /// <summary>Values the director gives every recorded line, with or without the runtime voice.</summary>

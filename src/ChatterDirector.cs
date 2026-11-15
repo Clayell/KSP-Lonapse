@@ -13,7 +13,9 @@ namespace Lonapse
         // A probe core on a crewed vessel beeps in the cabin (beep[1], intercom sound), part of a chat
         CabinBeep,
         // a line shown as a subtitle only, no voice (a mod event with the runtime voice off). speaker null: Mission Control
-        SubtitleLine }
+        SubtitleLine,
+        // a faint open carrier while the ship waits out the light delay, cut by the burst before the MC line
+        DelayHiss }
 
     public class Utterance
     {
@@ -242,6 +244,22 @@ namespace Lonapse
         private bool SlotsOk(PhraseScene sc)
         {
             if (sc == null) return false;
+            Vessel crewVessel = ActiveVessel;
+            bool singleCrew = false;
+            try { singleCrew = crewVessel != null && !crewVessel.isEVA && crewVessel.GetCrewCount() == 1; }
+            catch (Exception) { }
+            if (singleCrew)
+                foreach (PhraseEntry line in sc.Lines)
+                {
+                    if (line.Role == "crew" && System.Text.RegularExpressions.Regex.IsMatch(line.English ?? "",
+                        @"\b(we|us|our|ours|they|them|their|theirs|themselves|everyone|both of us|each other|one another)\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase)) return false;
+                    if (line.Role == "crew" && System.Text.RegularExpressions.Regex.IsMatch(line.Spanish ?? "",
+                        @"\b(todos|todas|nosotros|nosotras|nos|nuestro|nuestra|nuestros|nuestras|ellos|ellas|ustedes|ambos|ambas|juntos|juntas|estamos|seguimos|tenemos|podemos|vamos|somos|hemos)\b",
+                        System.Text.RegularExpressions.RegexOptions.IgnoreCase)) return false;
+                    if (line.Role == "mc" && System.Text.RegularExpressions.Regex.IsMatch(line.Spanish ?? "",
+                        @"\b(os|vosotros|vosotras|vuestro|vuestra|vuestros|vuestras|preparad|seguid|comprobad|apagad|frenad|mantened|mirad|guardad|intentad|revisad|esperad|avisad|bajad|subid|abrid|cerrad|haced|tened|poned|continuad|orientad|activad|soltad|agarrad|respirad|usad|escuchad|vigilad|recordad|pensad)\b",
+                        System.Text.RegularExpressions.RegexOptions.IgnoreCase)) return false;
+                }
             string predicate = sc.Lines.Count > 0 ? sc.Lines[0].RuntimeWhen : null;
             if (!string.IsNullOrEmpty(predicate))
             {
@@ -383,16 +401,16 @@ namespace Lonapse
             }
         }
 
-        /// <summary>Telemetry waits for the entire exchange, including queued replies and turn gaps.</summary>
+        /// <summary>A telemetry ping is a sound effect, not a transmission: it only waits while somebody is talking
+        /// (radio, callout, Mission Control or intercom) or the countdown runs. Gaps between turns are fine.</summary>
         public bool TelemetryMayStart
         {
-            get { return Idle && !Holding && !IntercomTurnOpen && !calloutPending && !runtimeChatPending && !reportPending
-                         && !RadioAudible && (host.countdown == null || !host.countdown.Running); }
+            get { return !VoiceActive && !IntercomAudible && (host.countdown == null || !host.countdown.Running); }
         }
 
         /// <summary>
         /// The radio is audible: a crew line on the radio preset, a callout, Mission Control (also the countdown),
-        /// radio keying (also a keyed ping) or a static burst. The blackout static loop and its
+        /// radio keying or a static burst. The blackout static loop and its
         /// crackle are not counted (Static and Blackout states), neither are descent blips, tones or the alarm.
         /// </summary>
         public bool RadioAudible
@@ -403,7 +421,6 @@ namespace Lonapse
                 if (host.calloutCh != null && host.calloutCh.Busy) return true;
                 if (host.control.Busy) return true; // the static bed is left out: it only runs under MC, and an orphan loop would block the intercom
                 if (host.keyCh != null && host.keyCh.Busy) return true;
-                if (host.beeps != null && host.beeps.TelemetryActive) return true;
                 if (host.probeMode && host.beep.Length > 1 && host.beep[1].Busy) return true; // the probe answers on the radio
                 BlackoutState bs = host.blackout != null ? host.blackout.state : BlackoutState.Clear;
                 return host.staticCh != null && host.staticCh.Busy && bs != BlackoutState.Static && bs != BlackoutState.Blackout;
@@ -430,6 +447,13 @@ namespace Lonapse
         /// An intercom turn is open: a line or click is audible, or the queued chat is between a turn's click and its
         /// line (or before its release click). The radio waits for it (AirRules.RadioMayStart).
         /// </summary>
+        /// <summary>
+        /// Somebody has the air: a line plays or waits in the queue (also the gap between two turns), a callout runs or
+        /// waits, or an intercom turn is open. A soft callout (throttle) is skipped then: it used to fade the line out
+        /// in the middle of a word, and a late "full throttle" is wrong too.
+        /// </summary>
+        public bool AirBusy { get { return !Idle || Holding || calloutPending || IntercomTurnOpen || ChatHoldsAir; } }
+
         public bool IntercomTurnOpen { get { return IntercomAudible || (chatStarted && HeadInOpenTurn()); } }
 
         private bool LineFollowsHead()
@@ -848,6 +872,17 @@ namespace Lonapse
         }
 
         private float VoiceBoost { get { return MixMath.DbToLin(host.settings.voiceBoostDb); } }
+        private float CrewPlaybackPitch(KerbalVoice sp, float basePitch, float sk, float gs, bool recordedPanic)
+        {
+            return CrewPlaybackPitch(Tu, sp, basePitch, sk, gs, recordedPanic);
+        }
+
+        /// <summary>The playback pitch of a crew line. Static, so the editor preview plays a kerbal as the flight does.</summary>
+        internal static float CrewPlaybackPitch(Tuning tu, KerbalVoice sp, float basePitch, float sk, float gs, bool recordedPanic)
+        {
+            return DcMath.CrewVoicePitch(basePitch, sp.isFemale, sk, gs, tu.crewStressSemitones, tu.crewPitchMax,
+                                         tu.genderPitchFemale, tu.genderPitchMale, tu.crewPlaybackSpeed, recordedPanic);
+        }
         private float ReceiverWeakness { get { return host.settings.signalMode == "off" ? 0f : DcMath.Clamp01(1f - host.signal.signal); } }
 
         /// <summary>Headset microphone, with helmet resonance on EVA.</summary>
@@ -968,7 +1003,7 @@ namespace Lonapse
                     float sk = sp.sk, gs = host.stress.gStrain;
                     // a recorded panic clip gets no stress pitch on top (a runtime voice render has no panic delivery)
                     bool recordedPanic = panic && rtClip == null;
-                    float pitch = DcMath.CrewPitch(sp.Pitch, sk, gs, tu.crewStressSemitones, tu.crewPitchMax, recordedPanic) * WarpPitch;
+                    float pitch = CrewPlaybackPitch(sp, sp.Pitch, sk, gs, recordedPanic) * WarpPitch;
                     float vol = DcMath.CrewVolume(sk) * (recordedPanic ? DcMath.PanicClipGain : 1f);
                     c.SetPreset(false, tu);
                     c.Play(clip, vol, pitch, false, 0f);
@@ -981,9 +1016,9 @@ namespace Lonapse
                     c.SetCrewFilters(sk, sp.timbre, gs, tu);
                     ApplyProfile(c);
                     StartCrewBed();
-                    float keep = DcMath.TruncFraction(sk, tu.truncStart, tu.truncMinFrac, recordedPanic);
+                    float keep = panic ? 1f : DcMath.TruncFraction(sk, tu.truncStart, tu.truncMinFrac);
                     if (keep < 1f) c.TruncateAt(clip.length * keep);
-                    if (staticChop) c.TruncateAt(U(tu.chopMin, tu.chopMax) * pitch);
+                    if (staticChop && !panic) c.TruncateAt(U(tu.chopMin, tu.chopMax) * pitch);
                     StampLine(sp, panic);
                     ShowSubtitle(shown, sp.displayName, c.duration);
                     lastLine = sp.displayName + ": " + what + " (" + sp.BandName + ")";
@@ -1018,7 +1053,7 @@ namespace Lonapse
                     if (clip == null) return StartResult.Skip;
                     float sk = sp.sk, gs = host.stress.gStrain;
                     bool recordedPanic = rtClip == null && (u.entry != null ? u.entry.Band == "panic" : icFolder == "crew/panic");
-                    float pitch = DcMath.CrewPitch(sp.Pitch * u.pitchMul, sk, gs, tu.crewStressSemitones, tu.crewPitchMax, recordedPanic) * WarpPitch;
+                    float pitch = CrewPlaybackPitch(sp, sp.Pitch * u.pitchMul, sk, gs, recordedPanic) * WarpPitch;
                     float vol = DcMath.CrewVolume(sk) * (recordedPanic ? DcMath.PanicClipGain : 1f);
                     c.SetPreset(true, tu, cfg.intercomRadioFx);
                     c.Play(clip, vol, pitch, false, 0f);
@@ -1166,8 +1201,20 @@ namespace Lonapse
                 case UttKind.BedStop:
                     host.controlBed.FadeOut(0.25f);
                     return StartResult.Instant;
+                case UttKind.DelayHiss:
+                {
+                    // Instant: the burst after it still counts its delay from the end of the ship's line
+                    VoiceChannel st = host.staticCh;
+                    if (cfg.radioStatic <= 0f || st.Busy || ClipLibrary.CountOf("sfx/loop") == 0) return StartResult.Instant;
+                    AudioClip clip = ClipLibrary.Next("sfx/loop", rng);
+                    if (clip == null) return StartResult.Instant;
+                    st.Play(clip, DelayHissVolume * host.settings.weakSignalVolume, 1f, true, 0.8f);
+                    delayHissUntil = clock + host.LightDelay + 1f;
+                    return StartResult.Instant;
+                }
                 case UttKind.StaticBurst:
                 {
+                    delayHissUntil = -1f;
                     if (cfg.radioStatic <= 0f) return StartResult.Instant;
                     AudioClip clip = ClipLibrary.Next("sfx/burst", rng);
                     if (clip == null) return StartResult.Skip;
@@ -1228,9 +1275,11 @@ namespace Lonapse
             return DcMath.Lerp(1.2f, 0.35f, s) * U(0.8f, 1.2f);
         }
 
+        /// <summary>Pause before a Mission Control line. The long-distance leg to KSC adds the light delay. A crew or
+        /// probe line uses LocalResponseDelay, also after MC: the ship hears MC the moment the call arrives, so only
+        /// the answer back to KSC is late.</summary>
         private float ResponseDelay(float s)
         {
-            // The long-distance leg to KSC still adds light delay.
             return LocalResponseDelay(s) + host.LightDelay;
         }
 
@@ -1238,11 +1287,14 @@ namespace Lonapse
         /// Mission Control talks to in this scene (the one who answers or just spoke), for a runtime name.</summary>
         private void EnqueueMc(string folder, float delay, PhraseEntry e = null, KerbalVoice to = null)
         {
-            if (count + 7 > Capacity) return;
+            if (count + 8 > Capacity) return;
             // a weak signal sometimes cracks before the transmission
             // far away the delayed answer arrives with a short crackle first
             // radioStatic also gives an occasional crackle at a full signal
             double crackle = Math.Max(host.StaticLevel, RadioStaticBurstChance * Math.Min(host.settings.radioStatic, 1f));
+            // a long wait for KSC gets a faint hiss, silence sounded like a bug
+            if (host.settings.radioStatic > 0f && host.LightDelay >= DelayHissMin && delay >= DelayHissMin)
+                Enqueue(UttKind.DelayHiss, null, DelayHissStart, 0f, null);
             if (host.settings.radioStatic > 0f && (rng.NextDouble() < crackle || host.LightDelay > 0.5f))
                 Enqueue(UttKind.StaticBurst, null, delay, 0f, null);
             Enqueue(UttKind.BedStart, null, delay, 0f, null);
@@ -1272,15 +1324,48 @@ namespace Lonapse
         }
 
         /// <summary>Crew radio transmission: key up, line, key down. One speaker, keyed per profile.</summary>
-        private void EnqueueCrew(string folder, float delay, float overlap, KerbalVoice sp = null, PhraseEntry e = null)
+        private void EnqueueCrew(string folder, float delay, float overlap, KerbalVoice sp = null, PhraseEntry e = null,
+                                 Func<bool> contextValid = null)
         {
             if (count + 4 > Capacity) return;
             bool keyed = overlap <= 0f;
-            if (keyed) Enqueue(UttKind.RadioOpen, null, delay, 0f, null);
+            if (keyed)
+            {
+                Utterance open = Enqueue(UttKind.RadioOpen, null, delay, 0f, null);
+                if (open != null) open.contextValid = contextValid;
+            }
             Utterance u = Enqueue(UttKind.CrewLine, folder, keyed ? 0.02f : delay, overlap, sp);
-            if (u != null) { u.entry = e; u.rt = PlanLine(e, sp, null); }
-            if (keyed && host.settings.rogerBeep) Enqueue(UttKind.RogerBeep, null, 0.04f, 0f, null);
-            if (keyed) Enqueue(UttKind.RadioClose, null, 0.02f, 0f, null);
+            if (u != null) { u.entry = e; u.rt = PlanLine(e, sp, null); u.contextValid = contextValid; }
+            if (keyed && host.settings.rogerBeep)
+            {
+                Utterance beep = Enqueue(UttKind.RogerBeep, null, 0.04f, 0f, null);
+                if (beep != null) beep.contextValid = contextValid;
+            }
+            if (keyed)
+            {
+                Utterance close = Enqueue(UttKind.RadioClose, null, 0.02f, 0f, null);
+                if (close != null) close.contextValid = contextValid;
+            }
+        }
+
+        /// <summary>Seconds of static before the crew says the radio is gone: right on the first crackle it sounded
+        /// like the line caused the blackout.</summary>
+        const float BlackoutNoticeDelayMin = 2.5f, BlackoutNoticeDelayMax = 5f;
+
+        /// <summary>Wait behind the current exchange to announce a crewed blackout, after a short delay.</summary>
+        public bool EnqueueBlackoutNotice()
+        {
+            if (count + 4 > Capacity || !host.roster.AnyoneCanSpeak()) return false;
+            KerbalVoice sp = KerbalVoice.PickCallout(host.roster.voices, rng);
+            if (sp == null) return false;
+            PhraseScene sc = PickScene("blackout_enter", null,
+                x => x.Lines.Count > 0 && x.Lines[0].Role == "crew" && FitsSpeaker(x, sp));
+            var lines = sc != null ? PlayLines(sc) : null;
+            if (lines == null || lines.Count == 0) return false;
+            EnqueueCrew(lines[0].Folder, U(BlackoutNoticeDelayMin, BlackoutNoticeDelayMax), 0f, sp, lines[0],
+                        () => host.blackout != null && host.blackout.state == BlackoutState.Blackout);
+            Log.Info("Blackout announcement queued after current speech");
+            return true;
         }
 
         // ---------------- scenes ----------------
@@ -1372,6 +1457,17 @@ namespace Lonapse
                 && !sc.IsProbe && CrewCanVoice(sc) && !SomberBlocks(sc) && PartsOk(sc)
                 && (intercom || BlackoutOk(sc)) && sc.PlaysAt(Body)
                 && (filter == null || filter(sc)) && SlotsOk(sc));
+            if (!intercom && ev == "chatter" && (phase == FlightPhase.Prelaunch || phase == FlightPhase.Launch))
+            {
+                var phaseLines = list.FindAll(sc => sc.Phase == phase);
+                if (phaseLines.Count > 0) list = phaseLines;
+            }
+            if (!intercom && host.LightDelay >= PacingRules.LongLightDelay)
+            {
+                // far out every answer from KSC waits, so ping-pong scenes drag: keep one round trip when there is a choice
+                var shortTalk = list.FindAll(sc => PacingRules.DelayedTurns(sc.Lines.ConvertAll(l => l.Role)) <= 1);
+                if (shortTalk.Count > 0) list = shortTalk;
+            }
             bool stressBand = !intercom && (band == "tense" || band == "panic");
             if (stressBand) list = StressRepeatFilter(list);
             else if (ev == "chatter") list = CalmRepeatFilter(list);
@@ -1415,9 +1511,7 @@ namespace Lonapse
                 float g = list[i].Cause == "any" ? anyGap : gap;
                 if (!stressSaid.TryGetValue(list[i].Id, out t) || clock - t >= g) fresh.Add(list[i]);
             }
-            if (fresh.Count > 0) return fresh;
-            list.RemoveAll(x => x.Cause == "any");
-            return list;
+            return fresh;
         }
 
         /// <summary>
@@ -1508,7 +1602,7 @@ namespace Lonapse
             for (int i = 0; i < lines.Count; i++)
             {
                 PhraseEntry e = lines[i];
-                float d = i == 0 ? delay : ResponseDelay(s);
+                float d = i == 0 ? delay : e.Role == "mc" ? ResponseDelay(s) : LocalResponseDelay(s);
                 if (e.Role == "mc") EnqueueMc(e.Folder, d, e, sc.CrewLines > 0 ? sp : null);
                 else EnqueueCrew(e.Folder, d, 0f, sp, e);
             }
@@ -1585,7 +1679,7 @@ namespace Lonapse
                 return true;
             }
 
-            if (appendOverlap)
+            if (appendOverlap && host.roster.SpeakableCount() > 1)
             {
                 // burst at high stress: one extra crew line over the running exchange, no MC
                 KerbalVoice extra = PickRested();
@@ -1663,7 +1757,7 @@ namespace Lonapse
                 else
                 {
                     EnqueueMc("control/calm", U(0f, 0.3f));
-                    if (rng.NextDouble() < 0.85) EnqueueCrew("crew/calm", ResponseDelay(s), 0f, sp);
+                    if (rng.NextDouble() < 0.85) EnqueueCrew("crew/calm", LocalResponseDelay(s), 0f, sp);
                 }
             }
             else if (s < tu.burstBand)
@@ -1676,7 +1770,7 @@ namespace Lonapse
                 else
                 {
                     EnqueueMc(McFolder(s), U(0f, 0.3f));
-                    EnqueueCrew(null, ResponseDelay(s), 0f, sp);
+                    EnqueueCrew(null, LocalResponseDelay(s), 0f, sp);
                 }
             }
             else
@@ -1704,7 +1798,13 @@ namespace Lonapse
         /// <summary>Scripted relief exchange after a reentry blackout.</summary>
         public void EnqueueRelief()
         {
-            if (host.probeMode) return; // no crew in probe mode
+            if (host.probeMode)
+            {
+                // the probe comes out of the plasma: Mission Control finds it again and it beeps back (signal_back scenes)
+                if (EnqueueProbeReaction(EventWatchers.SignalBack, 0.4f, true)) Remember("contact-returned");
+                else Log.Info("Probe blackout relief not played");
+                return;
+            }
             // a blackout chat is not cut: a started chat holds the air and the relief follows when it ends (AirRules)
             ClearRadioQueue();
             Enqueue(UttKind.StaticBurst, null, 0f, 0f, null);
@@ -1835,7 +1935,7 @@ namespace Lonapse
             if (sc == null)
             {
                 if (PhraseClips.Loaded) return true; // nothing fits now: consumed, no random clips
-                EnqueueMcFor("plan_node", U(0.3f, 1.0f)); EnqueueCrew("crew/calm", ResponseDelay(0.2f), 0f); return true;
+                EnqueueMcFor("plan_node", U(0.3f, 1.0f)); EnqueueCrew("crew/calm", LocalResponseDelay(0.2f), 0f); return true;
             }
             if (!EnqueueRadioScene(sc, null, U(0.3f, 1.0f))) return false;
             Log.Info("Pre-planning exchange queued");
@@ -2000,7 +2100,7 @@ namespace Lonapse
             VoiceChannel c = host.calloutCh;
             Tuning tu = Tu;
             float sk = sp.sk, gs = host.stress.gStrain;
-            float pitch = DcMath.CrewPitch(sp.Pitch, sk, gs, tu.crewStressSemitones, tu.crewPitchMax);
+            float pitch = CrewPlaybackPitch(sp, sp.Pitch, sk, gs, false);
             float vol = DcMath.CalloutVolume(sk);
             PreemptChatter();
             c.SetPreset(false, tu);
@@ -2028,7 +2128,7 @@ namespace Lonapse
                 {
                     PhraseEntry e = scLines[i];
                     if (e.Role == "mc") EnqueueMc(e.Folder, ResponseDelay(0.3f), e, sp);
-                    else EnqueueCrew(e.Folder, ResponseDelay(0.3f), 0f, sp, e);
+                    else EnqueueCrew(e.Folder, LocalResponseDelay(0.3f), 0f, sp, e);
                 }
             }
             lastLine = "callout " + sp.displayName + ": " + (sc != null ? scLines[0].ClipKey : folder);
@@ -2170,6 +2270,7 @@ namespace Lonapse
                 catch (Exception e) { Log.Exception("FlightPhaseClassifier", e); }
             }
             host.sample.phase = CurrentPhase;
+            host.sample.classifiedPhase = classifier.Current;
             DominantCause = ComputeCause();
 
             // who has the air (AirRules): the radio, or an intercom chat
@@ -2183,6 +2284,7 @@ namespace Lonapse
             if (modHold) holdoff = Math.Max(holdoff, 0.5f);
             else UpdateEvents();
             if (!modHold) RuntimeTick();
+            if (!modHold) LaunchTick(dt);
             ModTick();
             ProcessQueue();
 
@@ -2247,7 +2349,7 @@ namespace Lonapse
                         if (!EnqueueRadioScene(PickScene("station_check", null, null), PickRested(), U(0f, 0.3f)) && !PhraseClips.Loaded)
                         {
                             EnqueueMcFor("station_check", U(0f, 0.3f));
-                            EnqueueCrew("crew/calm", ResponseDelay(s), 0f);
+                            EnqueueCrew("crew/calm", LocalResponseDelay(s), 0f);
                         }
                         stationMcLeft = U(tu.stationMcMin, tu.stationMcMax);
                         Log.Info("Station call from Mission Control queued, next in about " + stationMcLeft.ToString("0") + " s");
@@ -2489,6 +2591,19 @@ namespace Lonapse
                 return (host.control.Busy && host.control.followRadioSignal)
                        || (carrierRunning && host.probeMode && host.beep[1].Busy && host.beep[1].probeBeep);
             }
+        }
+
+        /// <summary>Light delay hiss: from this delay (s) on, starting this long after the ship's line, at this level.</summary>
+        private const float DelayHissMin = 1.5f, DelayHissStart = 0.35f, DelayHissVolume = 0.3f;
+        private float delayHissUntil = -1f;
+
+        /// <summary>The burst before the MC line stops the delay hiss. When the MC line never comes (queue dropped,
+        /// blackout, radio off) the hiss fades out by itself.</summary>
+        internal void UpdateDelayHiss()
+        {
+            if (delayHissUntil < 0f || clock < delayHissUntil) return;
+            delayHissUntil = -1f;
+            if (host.staticCh != null && host.staticCh.Busy) host.staticCh.FadeOut(0.4f);
         }
 
         // Follow the actual audio, including direct runtime MC lines that have no queued BedStop item.

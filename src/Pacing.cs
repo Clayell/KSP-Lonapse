@@ -137,6 +137,64 @@ namespace Lonapse
 
     public static class PacingRules
     {
+        /// <summary>From this light delay (seconds) on, scenes with one delayed turn are picked over long ping-pong.</summary>
+        public const float LongLightDelay = 3f;
+
+        /// <summary>The turns of a scene that wait for the light delay: a Mission Control line right after a line of
+        /// the ship. "crew, mc, crew, mc" has 2, "mc, crew" has 0 (the first line has no wait of its own).</summary>
+        public static int DelayedTurns(System.Collections.Generic.IList<string> roles)
+        {
+            int n = 0;
+            if (roles == null) return 0;
+            for (int i = 1; i < roles.Count; i++)
+                if (roles[i] == "mc" && roles[i - 1] != "mc") n++;
+            return n;
+        }
+
+        /// <summary>A stage with parachutes and no decoupler or engine: staging only opens the chutes. Its callout is
+        /// the parachute one (drogue, semi), the staging callout would take the shared cooldown from it.</summary>
+        public static bool ChutesOnlyStage(bool hasDecoupler, bool hasEngine, bool hasChute)
+        {
+            return hasChute && !hasDecoupler && !hasEngine;
+        }
+
+        /// <summary>A stable orbit: closed, and the periapsis (from the centre of the body) above the lowest safe
+        /// orbit of the body (CelestialBody.minOrbitalDistance: the atmosphere or the highest mountains).</summary>
+        public static bool StableOrbit(double eccentricity, double peRadius, double minOrbitRadius)
+        {
+            if (double.IsNaN(eccentricity) || double.IsNaN(peRadius) || double.IsNaN(minOrbitRadius)) return false;
+            return eccentricity < 1.0 && peRadius > minOrbitRadius;
+        }
+
+        /// <summary>The low fuel call: the burning stage has fuel left but at most lowPercent, and the throttle is
+        /// open. NaN (no engine burns) never calls.</summary>
+        public static bool FuelLow(double percent, double throttle, double lowPercent)
+        {
+            if (double.IsNaN(percent) || double.IsNaN(throttle)) return false;
+            return percent > 0.5 && percent <= lowPercent && throttle > 0.05;
+        }
+
+        /// <summary>
+        /// Entry interface: in the top half of the atmosphere, falling, and fast enough for a real entry (at least
+        /// minShare of the circular orbit speed at this height, so a suborbital hop or a plane does not count). The
+        /// heat exchange starts here, well before the plasma blackout: waiting for the plasma left it no time.
+        /// </summary>
+        public static bool EntryInterface(double altitude, double atmosphereDepth, double verticalSpeed, double speed,
+                                          double circularSpeed, double minShare)
+        {
+            if (double.IsNaN(altitude) || double.IsNaN(verticalSpeed) || double.IsNaN(speed) || double.IsNaN(circularSpeed)) return false;
+            if (!(atmosphereDepth > 0)) return false;
+            return altitude < atmosphereDepth && altitude > atmosphereDepth * 0.5 && verticalSpeed < -20
+                   && speed >= minShare * circularSpeed;
+        }
+
+        /// <summary>Welcome home: the vessel was in space or at another body, it rests on the home body (landed or
+        /// splashed, slower than restSpeed) and it has rested restTime s.</summary>
+        public static bool HomeRest(bool wasAway, bool atHome, bool down, double speed, double restSpeed)
+        {
+            return wasAway && atHome && down && !double.IsNaN(speed) && speed < restSpeed;
+        }
+
         /// <summary>A decoupler or fairing makes it a separation (also with an engine), an engine alone an ignition.</summary>
         public static StageKind ClassifyStage(bool hasDecoupler, bool hasEngine)
         {
@@ -209,7 +267,8 @@ namespace Lonapse
         /// </summary>
         public static int CalloutRank(string ev)
         {
-            if (ev == "staging" || ev == "chute_semi" || ev == "chute_full") return 2;
+            if (ev == "blackout_enter") return 3;
+            if (ev == "staging" || ev == "chute_semi" || ev == "chute_drogue" || ev == "chute_full") return 2;
             return 1;
         }
 

@@ -204,7 +204,7 @@ The `gender` of a subtitle-only row does not matter. I write `both`.
 
 Rules the build and the C# loader enforce:
 
-- The probe events are `probe_chat`, `probe_sleepy`, `probe_hail`, `probe_stress`, `probe_say_again`, `probe_milestone`, `probe_rover` and `probe_data`. They have no `crew` rows. A `probe_hail` or `probe_data` scene starts with a `probe` row (the director only picks those).
+- The probe events are `probe_chat`, `probe_sleepy`, `probe_hail`, `probe_stress`, `probe_say_again`, `probe_milestone`, `probe_rover`, `probe_data` and `probe_blackout`. They have no `crew` rows. A `probe_blackout` scene is one `probe` row, the probe beeping to itself in the plasma. A `probe_hail` or `probe_data` scene starts with a `probe` row (the director only picks those).
 - A `probe_say_again` scene has exactly 2 rows, `mc` then `probe`. The director plays the MC line and then repeats the probe beep with that subtitle.
 - `probe_stress` uses the `cause` column. The director tries the main stress cause first, then `cause any`.
 - Topics: `staging` has `separation` and `ignition`, `probe_milestone` has `day1`, `day10`, `day100`, `day365`, `orbit` and `landing`, `probe_rover` has `fast`, `air`, `tilt` and `idle`. A milestone needs its exact topic.

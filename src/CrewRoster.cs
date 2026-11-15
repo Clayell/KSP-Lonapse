@@ -78,7 +78,7 @@ namespace Lonapse
         /// hash-based profile of a kerbal stays the same. The defaults match Tuning.genderPitchFemale/Male.
         /// </summary>
         public static KerbalVoice Create(string name, float courage, float stupidity, bool isBadass, bool female,
-                                         float pitchFemale = 1.06f, float pitchMale = 0.96f)
+                                         float pitchFemale = DcMath.GenderPitchFemale, float pitchMale = DcMath.GenderPitchMale)
         {
             KerbalVoice k = Create(name, courage, stupidity, isBadass);
             k.isFemale = female;
@@ -188,8 +188,8 @@ namespace Lonapse
             band = NextBand(band, sk, tenseAt, panicNow, maxBand);
         }
 
-        /// <summary>The panic threshold in effect (panicAt plus the escalation offset), set by UpdateStress. The face
-        /// scale uses it, so the face turns scared where the voice does.</summary>
+        /// <summary>The panic threshold in effect for the voice (panicAt plus the escalation offset), set by
+        /// UpdateStress. The face uses the plain panicAt: escalation only keeps panic lines from repeating.</summary>
         public float PanicNow { get { return panicNow > 0f ? panicNow : panicAt; } }
         private float panicNow;
 
@@ -414,7 +414,7 @@ namespace Lonapse
         /// <summary>Escalation offset on every panic threshold, set by the director. 0 means none.</summary>
         public float panicOffset;
         /// <summary>Gender pitch factors, set from Tuning by the addon. Defaults match Tuning.</summary>
-        public float genderPitchFemale = 1.06f, genderPitchMale = 0.96f;
+        public float genderPitchFemale = DcMath.GenderPitchFemale, genderPitchMale = DcMath.GenderPitchMale;
         /// <summary>
         /// Settings.personalityEffects. Set it from the settings by the addon, like the gender pitch.
         /// Change it at runtime with SetPersonalityEffects so the voices update at once.

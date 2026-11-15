@@ -1,5 +1,81 @@
 # Changelog
 
+## 1.0.0
+
+Lonapse hits 1.0! Your kerbals now talk through the big moments of a flight, from the pad all the way back home. You can also give your own craft custom voicelines for action groups, right in the VAB or SPH, and your probes can beep for them too. Probes got a lot more personality, with more science talk, relief after a scare and nervous beeps in a reentry blackout. There's a ton of new dialogue on top, and the faces and the audio got a good round of fixes.
+
+### New
+
+- **Mission moments.** Mission Control and the crew now talk on the launch pad, right after liftoff, when you reach a stable orbit, when the last stage runs low on fuel, when the entry heat starts to build and when you're back home after a trip to space. Each one has plenty of versions, so you won't hear the same exchange every flight.
+
+- **Probe crash.** When your probe crashes, Mission Control notices.
+
+- **Action group voicelines.** Click the antenna button on the toolbar in the VAB or SPH to give a craft its own lines for Abort, Gear, Lights, Brakes, RCS, SAS and Custom 1 to 10. Per line you pick who says it and if it goes over the radio or the intercom. Mission Control can reply too. Type your lines in English and Lonapse turns them into rough Spanish for the voice. The lines are saved in the craft. A craft you never set up uses the built-in lines for Abort, Gear and Lights.
+
+- **Probes in a blackout.** A probe in a reentry blackout beeps to itself through the plasma, nervous or about the heat. When it comes out, Mission Control finds it again and it beeps back.
+
+- **Probe relief.** When a probe calms down after a tense moment, Mission Control tells it things have settled down.
+
+- **Welcome note.** The first time you visit the Space Center a short note shows where the settings live, how to mute, and where to look when something sounds off.
+
+- **Lots more dialogue.**
+
+  - 50 calm and tense chatter scenes for launch and the pad, and 50 more for reentry.
+  - Science talk knows when it's the first result in a new situation.
+  - Tense lines per cause of stress, and new relief lines when things calm down.
+  - Mission Control has 12 new ways to open a relief call.
+  - More biome replies, EVA, flag, docking and chatter lines.
+  - Probes have more science talk. There are lines for the seismic scan, atmosphere analysis, infrared telescope and magnetometer, more lines for the stock experiments, and lines for orbit, landing, flight, water, big and small points, far from home and data kept aboard. Every stock core got one more.
+  - A capsule with one kerbal gets lines that fit a solo pilot, so no more "we" with nobody else aboard.
+
+### Changed
+
+- **Faces show fear earlier.** Above the tense point the grin fades fast and fear builds up to the panic point. The stock grin no longer waters it down. A kerbal at 0.8 stress with panic at 0.69 now really looks scared.
+
+- **Fewer audio cut-outs.** Every voice now loads at the Space Center and the panic voice shares the process of the tense voice. Before, a voice could load in the middle of a flight and stutter the audio.
+
+- **Throttle callouts wait their turn.** "Full throttle" and "throttle cut" no longer cut into someone who is talking. When the radio is busy the callout is skipped.
+
+- **Entry warnings come earlier.** The heat exchange starts when you hit the top of the atmosphere at entry speed, instead of when the plasma is already glowing.
+
+- **Calmer reentries.** Spin, G-force, pressure, heat and plasma used to stack up during reentry. Now the strongest one counts, so a normal descent doesn't send the crew into a panic.
+
+- **Blackout timing.** The crew says the radio is gone a few seconds into the static, after the current line ends. The blackout static has its own sound channel now.
+
+- **Panic lines play in full.** A panicked line is no longer cut short by static.
+
+- **Voice mixer.** The pitch ceiling can't go below 1.12 anymore, so it never squashes the normal spread of voices. More stress never makes a voice brighter. Bad numbers in settings.cfg fall back to the defaults. The hint under the slider explains how stress, gender, speed and the ceiling add up.
+
+- **Light delay is off by default.** Long silences before Mission Control answered sounded like a bug to most players. You can switch it on in the Crew tab, with a new slider for the longest wait, up to 30 s. A faint hiss now fills the wait while the call travels, and far from Kerbin the talk keeps to shorter exchanges so you don't sit through a pile of delays. The update switches it off for everyone, so turn it back on if you liked it.
+
+- **Telemetry pings are just sound effects now.** No radio clicks around them, and they no longer hold up the crew or Mission Control. A ping only waits while somebody is actually talking, so you hear them again during a busy launch.
+
+- **Debug overlay.** It shows the tense point, the escalated voice panic and the face limit of every stressed kerbal.
+
+### Fixed
+
+- A probe stayed quiet about science during launch, ascent, reentry and descent. It now reacts to every experiment.
+- Lines about one experiment, like the goo or the thermometer, never played for the stock probe cores. Now they mix with the core's own lines.
+- Drogue chutes no longer get a "staging" callout. They have their own line now.
+- Resetting Mystery Goo or a materials bay no longer starts a science line.
+- The crew no longer says "again" about a report in a new situation.
+- "Very pretty, very brown" isn't picked every single time anymore.
+- The relief call "So good to hear you" no longer repeats over and over.
+- One-kerbal capsules used to get only a few launch and heat lines.
+- The blackout notice no longer shows up twice.
+- A kerbal alone in a capsule no longer talks over themselves.
+- Far from Kerbin, the crew used to wait out the light delay again before answering Mission Control. Now only the trip to KSC is delayed, so a reply to MC comes right away. Probes work the same way.
+
+### For modders
+
+- New triggers `orbit_reached`, `fuel_low`, `welcome_home`, `vessel_lost`, `chute_drogue`, `blackout_enter` and `probe_blackout`. There are 46 flight triggers now. See `docs/API.md`.
+- New slots `{climb_ms}`, `{sci_new}` and `{sci_sit}`.
+- With one kerbal aboard, scenes with plural crew wording are filtered out. `docs/API.md` lists the words it checks.
+- Craft voicelines live in `ModuleLonapseVoicelines`, added to command parts by `Patches/Lonapse_Voicelines.cfg`. The word list for the Spanish lives in `Phrases/english_spanish.tsv`.
+- `Phrases/action_groups.tsv` has a new `beep` column. A row with speaker `probe` is a built-in probe beep, with the mood in `beep` and the subtitle `[beeps ...]` in `english`. A group can have several, `default` and the reply columns work like for a voiceline, and a `custom` row is a preset.
+- Probe science lines can use the new topics `probe.science_seismicscan`, `probe.science_atmosphereanalysis`, `probe.science_infraredtelescope` and `probe.science_magnetometer`.
+- Probe report lines with a `core` now win over lines for any core half the time instead of always. Lines from a mod with a `core` still always win.
+
 ## 0.9.0
 
 Most voicelines are now generated at runtime! This will open up possibilities for even more dynamic voicelines in the future! Also Russian and Chinese names are now supported! And for those of you that play IVA or in VR, Lonapse has RasterPropMonitor support too! You can find the page by pressing the "Sci/Comms" button! Additionally, the radio sound FX have been reworked to make it sound like the Kerbals are using a worse headset.
@@ -16,7 +92,7 @@ Most voicelines are now generated at runtime! This will open up possibilities fo
 
 - **Telemetry pings in the subtitles.** A telemetry ping now shows a short line from "Telemetry", like "Downlink ping. Link at 87%." With CommNet or RemoteTech it reads the real link strength.
 
-- **Cabin sound in IVA.** In IVA you hear the cabin: fans, a soft hum and a faint whine. When the batteries run flat a relay clunks and the fans and the motor spin down until the cabin is quiet. When the power comes back the fans spin up again. You can also hear  metal rattling/creaking sound effects when your thrusters are firing! It has its own toggle and volume slider in the Sound tab and follows Sound effects. 
+- **Cabin sound in IVA.** In IVA you hear the cabin: fans, a soft hum and a faint whine. When the batteries run flat a relay clunks and the fans and the motor spin down until the cabin is quiet. When the power comes back the fans spin up again. You can also hear  metal rattling/creaking sound effects when your thrusters are firing! It has its own toggle and volume slider in the Sound tab and follows Sound effects.
 
 ### Changed
 

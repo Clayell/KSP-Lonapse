@@ -379,17 +379,15 @@ namespace Lonapse
             float cutoff = tu.intercomLp * timbre * DcMath.Lerp(1f, 0.5f, gStrain);
             lp.cutoffFrequency = Math.Max(cutoff, tu.crewLpMin);
             baseDistortion = 0f;
-            tremDepth = 0.40f * gStrain;
+            tremDepth = DcMath.Clamp01(0.40f * gStrain * tu.crewWobbleMix);
         }
 
         /// <summary>Crew filter response, updated every frame while playing.</summary>
         public void SetCrewFilters(float sk, float timbre, float gStrain, Tuning tu)
         {
-            float cutoff = DcMath.Lerp(tu.crewLpCalm, tu.crewLpStress, sk) * timbre * DcMath.Lerp(1f, 0.25f, gStrain);
-            if (cutoff < tu.crewLpMin) cutoff = tu.crewLpMin;
-            lp.cutoffFrequency = cutoff;
-            baseDistortion = DcMath.CrewDistortion(sk, gStrain, recordedPanic);
-            tremDepth = 0.40f * gStrain + 0.10f * DcMath.Smooth(sk, 0.8, 1.0);
+            lp.cutoffFrequency = DcMath.CrewLowPass(tu.crewLpCalm, tu.crewLpStress, sk, timbre, gStrain, tu.crewLpMin);
+            baseDistortion = DcMath.CrewDistortion(sk, gStrain, recordedPanic) * tu.crewGritMix;
+            tremDepth = DcMath.Clamp01((0.40f * gStrain + 0.10f * DcMath.Smooth(sk, 0.8, 1.0)) * tu.crewWobbleMix);
         }
 
         /// <param name="categoryVolume">settings volume for this kind</param>

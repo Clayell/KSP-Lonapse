@@ -78,16 +78,21 @@ namespace Lonapse
     public sealed class PhraseTable
     {
         public static readonly string[] Events = {
-            "chatter", "staging", "chute_semi", "chute_full", "throttle_full", "throttle_cut",
+            "chatter", "staging", "chute_semi", "chute_drogue", "chute_full", "blackout_enter", "throttle_full", "throttle_cut",
             "dock_approach", "dock_close", "dock_hard", "docked", "touchdown", "splashdown", "relief",
             "plan_node", "burn_soon", "station_check", "eva_check", "eva_fall", "countdown",
+            // the launch pad, the liftoff, a stable orbit, low fuel in the last stage, the first heat of an
+            // atmospheric entry and the vessel at rest on the home body after a trip to space
+            "launch_pad", "liftoff", "orbit_reached", "fuel_low", "reentry_heat", "welcome_home",
             // game events
-            "soi_enter", "science", "part_lost", "power_low", "power_ok", "signal_lost", "signal_back", "crew_lost",
+            "soi_enter", "science", "part_lost", "power_low", "power_ok", "signal_lost", "signal_back", "crew_lost", "vessel_lost",
             // probe mode
             "probe_chat", "probe_sleepy",
             // probe mode: the probe calls Mission Control first, stress per cause, "say again?" on a weak
             // signal, milestones, rover driving, data transmission
             "probe_hail", "probe_stress", "probe_say_again", "probe_milestone", "probe_rover", "probe_data",
+            // probe mode: the probe beeps to itself in a reentry blackout, nothing gets through the plasma
+            "probe_blackout",
             // The probe and the crew on one vessel talk in the cabin
             ProbeCrewEvent };
         /// <summary>
@@ -99,7 +104,7 @@ namespace Lonapse
         // Events that only play in probe mode. Same as PROBE_EVENTS in audio/build_lonapse.py.
         public static readonly string[] ProbeEvents = {
             "probe_chat", "probe_sleepy", "probe_hail", "probe_stress", "probe_say_again", "probe_milestone", "probe_rover",
-            "probe_data" };
+            "probe_data", "probe_blackout" };
         // Existing events that also have probe scenes (marked by a core or a probe-mode role).
         // Same as PROBE_VARIANT_EVENTS in audio/build_lonapse.py.
         public static readonly string[] ProbeVariantEvents = {

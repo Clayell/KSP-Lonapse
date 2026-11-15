@@ -19,56 +19,11 @@ namespace Lonapse
 
         // Descent blips, touchdown tone and touchdown exchange are one sequence
         public readonly DescentSequence descent = new DescentSequence(6f);
-        // A ping is keyed like a transmission: key up, ping, key down
-        private float pingSeqPing = -1f, pingSeqClose = -1f;
-        public bool TelemetryActive { get { return pingSeqPing > 0f || pingSeqClose > 0f; } }
 
         public BeepDirector(LonapseAddon host, System.Random rng)
         {
             this.host = host;
             this.rng = rng;
-        }
-
-        private void TickPingSequence(float dt)
-        {
-            if (TelemetryActive && (host.director.VoiceActive || host.director.IntercomAudible || host.director.QueueCount > 0))
-            {
-                pingSeqPing = pingSeqClose = -1f;
-                host.beep[0].FadeOutOnce(0.05f);
-                return;
-            }
-            if (pingSeqPing > 0f)
-            {
-                pingSeqPing -= dt;
-                if (pingSeqPing <= 0f)
-                {
-                    pingSeqPing = -1f;
-                    AudioClip clip = ClipLibrary.Next("beeps/ping", rng);
-                    VoiceChannel b = host.beep[0];
-                    if (clip != null) { b.Play(clip, Tu.pingVolume, 1f, false, 0f); pingSeqClose = b.duration + 0.03f; }
-                }
-            }
-            else if (pingSeqClose > 0f)
-            {
-                pingSeqClose -= dt;
-                if (pingSeqClose <= 0f)
-                {
-                    pingSeqClose = -1f;
-                    KeyClip(false);
-                }
-            }
-        }
-
-        /// <summary>Key-up or key-down sound of the current radio profile on the key channel. Returns its length.</summary>
-        private float KeyClip(bool open)
-        {
-            RadioProfile p = host.profile ?? RadioProfiles.Get(RadioContext.Ship);
-            string f = open ? p.OpenClip : p.CloseClip;
-            if (ClipLibrary.CountOf(f) == 0) return 0f;
-            AudioClip c = ClipLibrary.Next(f, rng);
-            if (c == null) return 0f;
-            host.keyCh.Play(c, Tu.radioKeyVolume * 0.8f, 1f, false, 0f);
-            return host.keyCh.duration;
         }
 
         private Tuning Tu { get { return host.settings.tuning; } }
@@ -117,11 +72,10 @@ namespace Lonapse
 
         public void Update(float dt, ref FlightSample s)
         {
-            if (!host.CanStartAudio || host.director.radioSilent) { pingSeqPing = pingSeqClose = -1f; return; }
+            if (!host.CanStartAudio || host.director.radioSilent) return;
             if (host.director.mcBlackout) pingLeft = Math.Max(pingLeft, 1f); // no telemetry pings in a blackout, the rest goes on
-            if (!host.settings.beepsEnabled) { descentActive = false; warpPingLeft = -1f; pingSeqPing = pingSeqClose = -1f; return; }
+            if (!host.settings.beepsEnabled) { descentActive = false; warpPingLeft = -1f; return; }
             Tuning tu = Tu;
-            TickPingSequence(dt);
 
             if (warpPingLeft > 0f)
             {
@@ -202,20 +156,14 @@ namespace Lonapse
         {
             if (!host.CanStartAudio || host.director.radioSilent || host.director.mcBlackout || !host.settings.beepsEnabled) return null;
             if (queued ? host.director.VoiceActive || host.director.IntercomTurnOpen : !host.director.TelemetryMayStart) return null;
-            if (ClipLibrary.CountOf("beeps/ping") == 0) return null;
-            if (pingSeqPing > 0f || pingSeqClose > 0f) return null; // one keyed ping at a time
+            VoiceChannel b = host.beep[0];
+            if (b.Busy) return null; // one ping at a time, and never on top of a descent blip
+            AudioClip clip = ClipLibrary.Next("beeps/ping", rng);
+            if (clip == null) return null;
             ShowPingSubtitle();
-            float open = KeyClip(true);
-            if (open <= 0f)
-            {
-                AudioClip clip = ClipLibrary.Next("beeps/ping", rng);
-                if (clip == null) return null;
-                host.beep[0].Play(clip, Tu.pingVolume, 1f, false, 0f);
-                pingSeqClose = host.beep[0].duration + 0.03f;
-                return host.beep[0];
-            }
-            pingSeqPing = Math.Max(0.02f, open - 0.04f); // ping starts on the tail of the key-up noise
-            return host.keyCh;
+            // a ping is a sound effect, no transmission: no key clicks, and it never holds the radio
+            b.Play(clip, Tu.pingVolume, 1f, false, 0f);
+            return b;
         }
 
         /// <summary>
@@ -228,6 +176,13 @@ namespace Lonapse
             string tag = "stage " + stage + (source != null ? " (" + source + ")" : "");
             if (!host.CanStartAudio) { Log.Info("Stage callout skipped, " + tag + ": gate " + (host.paused ? "paused" : host.gateReason)); return; }
             if (host.director.radioSilent) { Log.Info("Stage callout skipped, " + tag + ": radio blackout"); return; }
+            // a stage of parachutes only: the parachute callout says it when they open
+            if (host.StageOnlyChutes(stage))
+            {
+                Log.Info("Stage callout skipped, " + tag + ": parachutes only, the parachute callout speaks");
+                if (host.settings.stageTone) PlayStageTone(tag);
+                return;
+            }
             float now = Time.unscaledTime;
             if (!host.callouts.TryShared(now, Tu.calloutCooldown)) { Log.Info("Stage callout skipped, " + tag + ": cooldown"); return; }
 

@@ -47,7 +47,11 @@ namespace Lonapse
                 List<int> bare = vs.FindAll(i => !SubtitleSlots.NamesSomeone(t.Versions[i][1]));
                 if (bare.Count > 0) vs = bare;
             }
-            int v = vs[rng.Next(vs.Count)];
+            // the line memory goes through every version before one comes back, so a reply with two versions does
+            // not land on the same one again and again
+            List<string> keys = vs.ConvertAll(i => i.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            string p = Mem.TakeValue(SceneMemory.VersionPool + t.Id, keys, rng);
+            int v = p != null ? int.Parse(p, System.Globalization.CultureInfo.InvariantCulture) : vs[rng.Next(vs.Count)];
             if (SubtitleSlots.NamesSomeone(t.Versions[v][1])) NameSaid();
             return v;
         }
@@ -409,6 +413,7 @@ namespace Lonapse
                 }
             }
             nums["alt_km"] = v.altitude / 1000.0;
+            nums["climb_ms"] = v.verticalSpeed;
             nums["speed"] = sit == "orbit" || sit == "escape" ? v.obt_speed : v.srfSpeed;
             Orbit o = v.orbit;
             if (o != null && (sit == "orbit" || sit == "suborbital" || sit == "escape"))
@@ -609,7 +614,11 @@ namespace Lonapse
         /// liquid engine, the one that fires next. No liquid engine at all: NaN, so no fuel line plays (
         /// "92 % fuel left" before any engine had fired, the old fallback counted every tank of the vessel).
         /// </summary>
-        static double StageFuelPercent(Vessel v, bool log)
+        static double StageFuelPercent(Vessel v, bool log) { return StageFuelPercent(v, log, false); }
+
+        /// <summary>StageFuelPercent. With <paramref name="burningOnly"/> only the stage that burns now: NaN without a
+        /// running liquid engine (the low fuel call).</summary>
+        static double StageFuelPercent(Vessel v, bool log, bool burningOnly)
         {
             var burning = new List<Part>();
             var waiting = new List<Part>();
@@ -628,6 +637,7 @@ namespace Lonapse
                     }
             }
             catch (Exception) { burning.Clear(); waiting.Clear(); }
+            if (burningOnly && burning.Count == 0) return double.NaN;
             string what = "the burning stage";
             List<Part> engines = burning;
             if (engines.Count == 0 && waiting.Count > 0)
@@ -1553,16 +1563,31 @@ namespace Lonapse
             List<int> vs = RuntimeLines.FillableVersions(t, nums, names);
             int vi = PickRuntimeVersion(t, vs, NamesRecent);
             if (vi < 0 || !RuntimeLines.Fill(t, vi, nums, names, out spanish, out english)) return;
-            Vessel evaVessel = t.Kind == "eva" ? ActiveVessel : null;
-            Func<bool> contextValid = evaVessel == null ? (Func<bool>)null : () =>
+            Vessel reportVessel = t.Kind == "eva" || t.Kind == "report" || t.Kind == "land" ? ActiveVessel : null;
+            Func<bool> contextValid = reportVessel == null ? (Func<bool>)null : () =>
             {
                 Vessel live = ActiveVessel;
-                if (live == null || live != evaVessel || !live.isEVA) return false;
+                if (live == null || live != reportVessel || t.Kind == "eva" && !live.isEVA) return false;
                 string sit = SituationOf(live) ?? "other";
                 var liveNums = new Dictionary<string, double>();
                 var liveNames = new Dictionary<string, string[]>();
                 CollectValues(live, sit, liveNums, liveNames, false);
-                return RuntimeLines.Holds(t, sit, liveNums) && RuntimeLines.FillableVersions(t, liveNums, names).Contains(vi);
+                if (t.Kind == "land")
+                {
+                    liveNums["height_m"] = live.heightFromTerrain;
+                    liveNums["vspeed_ms"] = -live.verticalSpeed;
+                }
+                if (!RuntimeLines.Holds(t, sit, liveNums) || !RuntimeLines.FillableVersions(t, liveNums, liveNames).Contains(vi)) return false;
+                string source = t.Versions[vi][0] + t.Versions[vi][1];
+                foreach (var limit in new[] { new { key = "alt_km", drift = 1.0 }, new { key = "speed", drift = 25.0 },
+                                               new { key = "fuel", drift = 2.0 }, new { key = "height_m", drift = 20.0 },
+                                               new { key = "vspeed_ms", drift = 2.0 } })
+                {
+                    double before, now;
+                    if (source.Contains("{" + limit.key + "}") && nums.TryGetValue(limit.key, out before)
+                        && liveNums.TryGetValue(limit.key, out now) && Math.Abs(now - before) > limit.drift) return false;
+                }
+                return true;
             };
             recentRuntime.Enqueue(t.Id);
             while (recentRuntime.Count > 4) recentRuntime.Dequeue();
@@ -1584,7 +1609,7 @@ namespace Lonapse
                 if (report) reportPending = false;
                 if (count + 8 > Capacity) return;
                 QueueSubtitle(null, e, delay);
-                if (rp != null && CanChat(rp.speaker)) QueueSubtitle(rp.speaker, rp.entry, ResponseDelay(host.stress.stress));
+                if (rp != null && CanChat(rp.speaker)) QueueSubtitle(rp.speaker, rp.entry, LocalResponseDelay(host.stress.stress));
                 Log.Info("Runtime voice off: " + t.Id + " shown as a subtitle" + (rp != null ? ", with a reply" : ""));
                 return;
             }
@@ -1604,7 +1629,7 @@ namespace Lonapse
                 PhraseClips.SetRuntimeClip(x.entry, x.clip);
                 runtimeOnly++;
                 int replyStart = count;
-                EnqueueCrew(x.entry.Folder, ResponseDelay(host.stress.stress), 0f, x.speaker, x.entry);
+                EnqueueCrew(x.entry.Folder, LocalResponseDelay(host.stress.stress), 0f, x.speaker, x.entry);
                 GuardQueued(replyStart, contextValid);
                 Log.Info("Runtime voice: reply " + x.entry.ClipKey + " (" + x.speaker.displayName + ") to " + t.Id);
             };
@@ -1821,7 +1846,7 @@ namespace Lonapse
                 }
                 PhraseClips.SetRuntimeClip(rp.entry, r.clip);
                 runtimeOnly++;
-                EnqueueCrew(rp.entry.Folder, ResponseDelay(host.stress.stress), 0f, rp.speaker, rp.entry);
+                EnqueueCrew(rp.entry.Folder, LocalResponseDelay(host.stress.stress), 0f, rp.speaker, rp.entry);
                 Log.Info("Runtime voice: reply " + rp.entry.ClipKey + " (" + rp.speaker.displayName + ") to the recorded scene " + sc.Id);
             });
         }

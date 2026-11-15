@@ -23,6 +23,12 @@ namespace Lonapse
         double sciFlight;
         readonly Dictionary<string, int> expRuns = new Dictionary<string, int>();
 
+        /// <summary>The science values of a subject as they were when the experiment ran. The talk comes later, after
+        /// the results dialog closed, and by then sent data may already count in R&amp;D: read live, a first report
+        /// sounded like a repeat.</summary>
+        struct SciSnap { public double pts, left; public bool first, fresh; }
+        readonly Dictionary<string, SciSnap> sciSnaps = new Dictionary<string, SciSnap>();
+
         /// <summary>From GameEventHub, for every experiment (also one in a cooldown): adds it to the science of this
         /// flight and the runs of its experiment.</summary>
         public void NoteExperiment(string subjectId, float dataAmount)
@@ -34,23 +40,30 @@ namespace Lonapse
                 sciFlightVessel = v.id;
                 sciFlight = 0;
                 expRuns.Clear();
+                sciSnaps.Clear();
             }
             string topic = RuntimeLines.ExperimentId(subjectId).ToLowerInvariant();
             int n;
             expRuns.TryGetValue(topic, out n);
             expRuns[topic] = n + 1;
             double pts, left;
-            bool first;
-            if (SciencePoints(subjectId, dataAmount, out pts, out left, out first)) sciFlight += pts;
+            bool first, fresh;
+            if (SciencePoints(subjectId, dataAmount, out pts, out left, out first, out fresh))
+            {
+                sciFlight += pts;
+                if (subjectId != null && (sciSnaps.Count < 256 || sciSnaps.ContainsKey(subjectId)))
+                    sciSnaps[subjectId] = new SciSnap { pts = pts, left = left, first = first, fresh = fresh };
+            }
             SnapshotProbeScience(subjectId, dataAmount);
         }
 
-        /// <summary>The science points of the data, what is left of the subject after it, and whether it is the first
-        /// data of the subject. False without career science (sandbox) or an unknown subject.</summary>
-        bool SciencePoints(string subjectId, float dataAmount, out double pts, out double left, out bool first)
+        /// <summary>The science points of the data, what is left of the subject after it, whether it is the first data
+        /// of this experiment anywhere (first) and whether this subject (experiment, body, situation and biome) had no
+        /// science yet (fresh). False without career science (sandbox) or an unknown subject.</summary>
+        bool SciencePoints(string subjectId, float dataAmount, out double pts, out double left, out bool first, out bool fresh)
         {
             pts = left = double.NaN;
-            first = false;
+            first = fresh = false;
             try
             {
                 if (ResearchAndDevelopment.Instance == null) return false;
@@ -60,11 +73,34 @@ namespace Lonapse
                 if (sub == null) return false;
                 float mul = HighLogic.CurrentGame.Parameters.Career.ScienceGainMultiplier;
                 pts = ResearchAndDevelopment.GetScienceValue(dataAmount, sub, 1f) * mul;
-                first = sub.science < 0.01f;
+                int runs;
+                string experiment = RuntimeLines.ExperimentId(subjectId);
+                expRuns.TryGetValue(experiment.ToLowerInvariant(), out runs);
+                fresh = sub.science < 0.01f;
+                first = fresh && runs <= 1;
+                var subjects = first ? ResearchAndDevelopment.GetSubjects() : null;
+                if (subjects != null)
+                    foreach (ScienceSubject prior in subjects)
+                        if (prior != null && prior.id != subjectId && prior.science >= 0.01f
+                            && prior.id.StartsWith(experiment + "@", StringComparison.OrdinalIgnoreCase))
+                        { first = false; break; }
                 left = (sub.scienceCap - sub.science) * mul - pts;
                 return true;
             }
-            catch (Exception) { pts = left = double.NaN; return false; }
+            catch (Exception) { pts = left = double.NaN; first = fresh = false; return false; }
+        }
+
+        /// <summary>SciencePoints as they were when the experiment ran (NoteExperiment), or read now for an experiment
+        /// that was not noted (the Debug tab).</summary>
+        bool SciencePointsAtRun(string subjectId, float dataAmount, out double pts, out double left, out bool first, out bool fresh)
+        {
+            SciSnap snap;
+            if (subjectId != null && sciSnaps.TryGetValue(subjectId, out snap))
+            {
+                pts = snap.pts; left = snap.left; first = snap.first; fresh = snap.fresh;
+                return true;
+            }
+            return SciencePoints(subjectId, dataAmount, out pts, out left, out first, out fresh);
         }
 
         /// <summary>The values of one experiment: {sci} {sci_left} {sci_first}, {exp}, {body} and {here}, and what the
@@ -74,13 +110,18 @@ namespace Lonapse
                            Dictionary<string, string[]> names)
         {
             double pts, left;
-            bool first;
-            if (SciencePoints(subjectId, dataAmount, out pts, out left, out first))
+            bool first, fresh;
+            if (SciencePointsAtRun(subjectId, dataAmount, out pts, out left, out first, out fresh))
             {
                 if (pts >= 0.05) nums["sci"] = pts;
                 nums["sci_left"] = Math.Max(0, left);
                 nums["sci_first"] = first ? 1 : 0;
+                // a crew report gets all of its points at once, so sci_left is 0 after a new one too. sci_new tells
+                // a new situation or biome (no science before) from a real repeat.
+                nums["sci_new"] = fresh ? 1 : 0;
             }
+            int situation = RuntimeLines.ScienceSituation(subjectId);
+            if (situation > 0) nums["sci_sit"] = situation;
             // the experiment words are Spanish: reversed like the rest, so they go in a raw mark already reversed
             names["exp"] = ExpNames(subjectId);
             string[] b = BodyNames(bodyName);
@@ -136,15 +177,31 @@ namespace Lonapse
             foreach (List<RuntimeTemplate> t in RuntimeLines.Talks(PhraseClips.runtimeTemplates))
                 if (RuntimeLines.ForBatch(t) == (batch != null) && RuntimeLines.OnFits(t[0], topic, gen)
                     && RuntimeLines.TalkFits(t, sit, nums, namesCrew, namesMc, job)) fit.Add(t);
-            // mostly a talk about this experiment, sometimes one about any experiment
-            var own = fit.FindAll(t => t[0].On.Contains(topic ?? ""));
-            var rest = fit.FindAll(t => !t[0].On.Contains(topic ?? ""));
-            if (own.Count > 0 && (rest.Count == 0 || rng.NextDouble() < TalkOwnChance)) fit = own;
-            else if (rest.Count > 0) fit = rest;
-            // a talk that only fits now (first data, landed, far from home ...) gets a fair turn. For a batch: a check
-            // besides the experiment count.
-            var special = fit.FindAll(t => RuntimeLines.SpecialChecks(t[0]) > 0 || t[0].Situations.Count > 0);
-            if (special.Count > 0 && (debugTalkSpecial || rng.NextDouble() < TalkSpecialChance)) fit = special;
+            // the first data of this experiment: always the talk written for that. The first in a new situation or
+            // biome: always this experiment's own talk for it (crew report, EVA report). A new biome is common, so
+            // the talks about any experiment only get the fair turn below.
+            var news = fit.FindAll(t => RuntimeLines.Requires(t[0], "sci_first", 1));
+            var ownFirst = news.FindAll(t => t[0].On.Contains(topic ?? ""));
+            if (ownFirst.Count > 0) news = ownFirst;
+            if (news.Count == 0) news = fit.FindAll(t => RuntimeLines.Requires(t[0], "sci_new", 1) && t[0].On.Contains(topic ?? ""));
+            var special = new List<List<RuntimeTemplate>>();
+            if (news.Count > 0)
+            {
+                fit = news;
+                special = fit;
+            }
+            else
+            {
+                // mostly a talk about this experiment, sometimes one about any experiment
+                var own = fit.FindAll(t => t[0].On.Contains(topic ?? ""));
+                var rest = fit.FindAll(t => !t[0].On.Contains(topic ?? ""));
+                if (own.Count > 0 && (rest.Count == 0 || rng.NextDouble() < TalkOwnChance)) fit = own;
+                else if (rest.Count > 0) fit = rest;
+                // a talk that only fits now (landed, far from home ...) gets a fair turn. For a batch: a check besides
+                // the experiment count.
+                special = fit.FindAll(t => RuntimeLines.SpecialChecks(t[0]) > 0 || t[0].Situations.Count > 0);
+                if (special.Count > 0 && (debugTalkSpecial || rng.NextDouble() < TalkSpecialChance)) fit = special;
+            }
             List<RuntimeTemplate> talk = FreshestTalk(fit);
             if (talk == null) return false;
             lastTalkId = talk[0].Id;
@@ -390,7 +447,11 @@ namespace Lonapse
 
         void CloseBatch(SciBatch b)
         {
-            if (host.probeMode) { ProbeScience(b.subjects[0], b.amounts[0], b.body, b); return; }
+            if (host.probeMode)
+            {
+                if (!ProbeScience(b.subjects[0], b.amounts[0], b.body, b)) Log.Info("Probe science " + b.subjects[0] + ": no talk");
+                return;
+            }
             if (b.subjects.Count == 1)
             {
                 if (!RuntimeScienceTakeover(b.subjects[0], b.amounts[0], b.body))
@@ -478,7 +539,7 @@ namespace Lonapse
             for (int n = 0; n < s.entries.Count; n++)
             {
                 PhraseClips.SetRuntimeClip(s.entries[n], s.clips[n]);
-                float delay = n == 0 ? U(0.3f, 0.8f) : ResponseDelay(host.stress.stress);
+                float delay = n == 0 ? U(0.3f, 0.8f) : s.crewLine[n] ? LocalResponseDelay(host.stress.stress) : ResponseDelay(host.stress.stress);
                 if (s.crewLine[n]) EnqueueCrew(s.entries[n].Folder, delay, 0f, s.k, s.entries[n]);
                 else EnqueueMc(s.entries[n].Folder, delay, s.entries[n], s.k);
             }
@@ -494,37 +555,47 @@ namespace Lonapse
             }
         }
 
-        /// <summary>The values of a batch: {exp_count}, {exp_list}, {sci} the points of all of it, {sci_first} 1 when
-        /// every experiment is a first. No {sci_left} or {exp_runs}: those are about one experiment.</summary>
+        /// <summary>The values of a batch: {exp_count}, {exp_list}, {sci} the points of all of it, {sci_first} and
+        /// {sci_new} 1 when every experiment is a first or new, {sci_sit} when they share a situation. No {sci_left}
+        /// or {exp_runs}: those are about one experiment.</summary>
         void BatchValues(SciBatch b, Dictionary<string, double> nums, Dictionary<string, string[]> names)
         {
             double sum = 0;
-            bool anyPts = false, allFirst = true;
+            bool anyPts = false, allFirst = true, allNew = true;
+            int situation = -1;
             var es = new List<string>();
             var en = new List<string>();
             for (int i = 0; i < b.subjects.Count; i++)
             {
                 double pts, left;
-                bool first;
-                if (SciencePoints(b.subjects[i], b.amounts[i], out pts, out left, out first))
+                bool first, fresh;
+                if (SciencePointsAtRun(b.subjects[i], b.amounts[i], out pts, out left, out first, out fresh))
                 {
                     anyPts = true;
                     sum += pts;
                     if (!first) allFirst = false;
+                    if (!fresh) allNew = false;
                 }
-                else allFirst = false;
+                else allFirst = allNew = false;
+                // one situation for the batch, or none when the experiments disagree
+                int sit = RuntimeLines.ScienceSituation(b.subjects[i]);
+                situation = situation < 0 ? sit : situation == sit ? sit : 0;
                 string[] w = ExperimentLabels(b.subjects[i]);
                 if (!en.Contains(w[1])) { es.Add(w[0]); en.Add(w[1]); }
             }
             nums.Remove("sci");
             nums.Remove("sci_left");
             nums.Remove("sci_first");
+            nums.Remove("sci_new");
+            nums.Remove("sci_sit");
             nums.Remove("exp_runs");
             if (anyPts)
             {
                 if (sum >= 0.05) nums["sci"] = sum;
                 nums["sci_first"] = allFirst ? 1 : 0;
+                nums["sci_new"] = allNew ? 1 : 0;
             }
+            if (situation > 0) nums["sci_sit"] = situation;
             nums["exp_count"] = b.subjects.Count;
             string[] list = RuntimeLines.ListWords(es, en, BatchListMax);
             names["exp_list"] = new[] { LonapseText.ReverseText(list[0]), list[1] };

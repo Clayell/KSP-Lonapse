@@ -1,4 +1,22 @@
 id	line	scene	seq	speaker	trigger	channel	on	to	when	prefer	spanish	english	band	type	gender	phase	cause	job	trait	topic	core	beep	body	who	cooldown	priority	registration
+pair_checklist_seat_1	pair_checklist_seat_1	pair_checklist_seat	1	kerbal_a	flight.chatter	intercom				0	¿Quién ha movido la lista de comprobación?	Who moved the checklist?	calm	chatter	both	idle	any	any	any	any	any						
+pair_checklist_seat_2	pair_checklist_seat_2	pair_checklist_seat	2	kerbal_b	flight.chatter	intercom				0	La dejaste debajo de tu asiento.	You left it under your seat.	calm	chatter	both	idle	any	any	any	any	any						
+pair_checklist_seat_3	pair_checklist_seat_3	pair_checklist_seat	3	kerbal_a	flight.chatter	intercom				0	Entonces, ¿quién ha movido mi asiento?	Then who moved my seat?	calm	chatter	both	idle	any	any	any	any	any						
+pair_humming_1	pair_humming_1	pair_humming	1	kerbal_a	flight.chatter	intercom				0	Si me oyes tararear, avisa.	If you hear me humming, say something.	calm	chatter	both	idle	any	any	any	any	any						
+pair_humming_2	pair_humming_2	pair_humming	2	kerbal_b	flight.chatter	intercom				0	Estás tarareando ahora mismo.	You're humming right now.	calm	chatter	both	idle	any	any	any	any	any						
+pair_humming_3	pair_humming_3	pair_humming	3	kerbal_a	flight.chatter	intercom				0	Avisaste demasiado tarde.	You told me too late.	calm	chatter	both	idle	any	any	any	any	any						
+pair_loose_pen_1	pair_loose_pen_1	pair_loose_pen	1	kerbal_a	flight.chatter	intercom				0	He encontrado un bolígrafo flotando.	I found a pen floating around.	calm	chatter	both	idle	any	any	any	any	any						
+pair_loose_pen_2	pair_loose_pen_2	pair_loose_pen	2	kerbal_b	flight.chatter	intercom				0	Es mío. Llevo rato buscándolo.	It's mine. I've been looking for it.	calm	chatter	both	idle	any	any	any	any	any						
+pair_loose_pen_3	pair_loose_pen_3	pair_loose_pen	3	kerbal_a	flight.chatter	intercom				0	Entonces lo guardaré antes de perderlo yo.	Then I'll put it away before I lose it too.	calm	chatter	both	idle	any	any	any	any	any						
+pair_window_view_1	pair_window_view_1	pair_window_view	1	kerbal_a	flight.chatter	intercom				0	Mira esas vistas.	Look at that view.	calm	chatter	both	idle	any	any	any	any	any						
+pair_window_view_2	pair_window_view_2	pair_window_view	2	kerbal_b	flight.chatter	intercom				0	¿Por cuál ventana?	Which window?	calm	chatter	both	idle	any	any	any	any	any						
+pair_window_view_3	pair_window_view_3	pair_window_view	3	kerbal_a	flight.chatter	intercom				0	Por la que estás tapando.	The one you're blocking.	calm	chatter	both	idle	any	any	any	any	any						
+pair_snack_wrappers_1	pair_snack_wrappers_1	pair_snack_wrappers	1	kerbal_a	flight.chatter	intercom				0	¿Cuántos aperitivos quedan?	How many snacks are left?	calm	chatter	both	idle	any	any	any	any	any						
+pair_snack_wrappers_2	pair_snack_wrappers_2	pair_snack_wrappers	2	kerbal_b	flight.chatter	intercom				0	Cuenta los envoltorios.	Count the wrappers.	calm	chatter	both	idle	any	any	any	any	any						
+pair_snack_wrappers_3	pair_snack_wrappers_3	pair_snack_wrappers	3	kerbal_a	flight.chatter	intercom				0	Eso responde a otra pregunta.	That answers a different question.	calm	chatter	both	idle	any	any	any	any	any						
+pair_ship_nickname_1	pair_ship_nickname_1	pair_ship_nickname	1	kerbal_a	flight.chatter	intercom				0	Deberíamos ponerle un apodo a la nave.	We should give the ship a nickname.	calm	chatter	both	idle	any	any	any	any	any						
+pair_ship_nickname_2	pair_ship_nickname_2	pair_ship_nickname	2	kerbal_b	flight.chatter	intercom				0	Ya tiene uno.	It already has one.	calm	chatter	both	idle	any	any	any	any	any						
+pair_ship_nickname_3	pair_ship_nickname_3	pair_ship_nickname	3	kerbal_a	flight.chatter	intercom				0	Por tu cara, prefiero no saberlo.	Judging by your face, I'd rather not know.	calm	chatter	both	idle	any	any	any	any	any						
 chat_fuel_1	chat_fuel_1	chat_fuel	1	kerbal_a	chat	intercom			fuel>=25	0	{other}, nos queda el {fuel} por ciento de combustible.	{other}, we have {fuel} percent fuel left.	calm	chatter	both	any	any	any	any	any	any						
 chat_fuel_1__v02	chat_fuel_1	chat_fuel	1	kerbal_a	chat	intercom			fuel>=25	0	{other}, el combustible está al {fuel} por ciento.	{other}, fuel is at {fuel} percent.	calm	chatter	both	any	any	any	any	any	any						
 chat_fuel_2	chat_fuel_2	chat_fuel	2	kerbal_b	chat	intercom				0	¿Y eso es mucho o poco?	Is that a lot or a little?	calm	chatter	both	any	any	any	any	any	any						

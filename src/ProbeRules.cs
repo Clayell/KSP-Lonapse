@@ -24,7 +24,8 @@ namespace Lonapse
         public const string Touchdown = "touchdown", Splashdown = "splashdown", Docked = "docked", BurnSoon = "burn_soon";
         public const string HailEvent = "probe_hail";
         public const string StressEvent = "probe_stress", SayAgainEvent = "probe_say_again", MilestoneEvent = "probe_milestone",
-                            RoverEvent = "probe_rover", DataEvent = "probe_data";
+                            RoverEvent = "probe_rover", DataEvent = "probe_data",
+                            BlackoutEvent = "probe_blackout";
         /// <summary>Subtitle of the data stream beep (beeps/probe_data).</summary>
         public const string DataSubtitle = "[beeps a data stream]";
 
@@ -97,11 +98,11 @@ namespace Lonapse
             return false;
         }
 
-        /// <summary>Probe events: crew_lost and signal_lost are dropped (Mission Control cannot reach the probe), the
-        /// rest plays on the radio.</summary>
+        /// <summary>Probe events: crew_lost, vessel_lost and signal_lost are dropped (Mission Control cannot reach the
+        /// probe), the rest plays on the radio. crew_lost and vessel_lost then get the one MC line of the final call.</summary>
         public static ProbeEventPlan PlanFor(string ev)
         {
-            if (ev == EventWatchers.CrewLost) return ProbeEventPlan.Drop;
+            if (ev == EventWatchers.CrewLost || ev == EventWatchers.VesselLost) return ProbeEventPlan.Drop;
             if (ev == EventWatchers.SignalLost) return ProbeEventPlan.Drop;
             return ProbeEventPlan.Radio;
         }
@@ -130,7 +131,7 @@ namespace Lonapse
                 case "dock_callout_far": return "curious";
                 case "dock_callout_near": return "proud";
                 case "staging": return HappyMood;
-                case "chute_semi": case "chute_full": return HappyMood;
+                case "chute_semi": case "chute_drogue": case "chute_full": return HappyMood;
                 case "throttle_full": return "proud";
                 case "throttle_cut": return "curious";
                 case "plan_node": return "curious";

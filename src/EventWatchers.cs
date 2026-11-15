@@ -27,10 +27,10 @@ namespace Lonapse
         }
     }
 
-    /// <summary>Pending-list priority (Director API): crew_lost > part_lost > power > signal > science > soi.</summary>
+    /// <summary>Pending-list priority (Director API): crew_lost and vessel_lost > part_lost > power > signal > science > soi.</summary>
     public static class EventPriority
     {
-        public const int Soi = 1, Science = 2, Signal = 3, Power = 4, PartLost = 5, CrewLost = 6;
+        public const int Soi = 1, Science = 2, Signal = 3, Power = 4, PartLost = 5, CrewLost = 6, VesselLost = 6;
     }
 
     public static class EventWatchers
@@ -41,10 +41,11 @@ namespace Lonapse
 
         public const string SoiEnter = "soi_enter", Science = "science", PartLost = "part_lost",
                             PowerLow = "power_low", PowerOk = "power_ok", SignalLost = "signal_lost",
-                            SignalBack = "signal_back", CrewLost = "crew_lost";
+                            SignalBack = "signal_back", CrewLost = "crew_lost", VesselLost = "vessel_lost";
 
         // Max ages for the events without a tuning key. Crew loss uses eventMaxAge, SOI and science eventMaxAge capped below.
         public const float PartLostMaxAge = 8f;     // only a fresh explosion is worth a call
+        public const float VesselLostMaxAge = 20f;  // the call right after a probe crashed, not minutes later
         public const float PowerMaxAge = 120f;
         public const float SignalMaxAge = 30f;      // a stale "signal back" sounds wrong
         public const float ScienceMaxAge = 600f;    // was 90 s, a science line now waits through an ascent or reentry

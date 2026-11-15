@@ -598,6 +598,13 @@ namespace Lonapse
 
         /// <summary>The checks of the template besides exp_count and data_sent: a talk that only fits now has one.
         /// Sent or kept is no rare moment, so a talk that checks only that is no special one.</summary>
+        /// <summary>The when column of the template asks for key=value (sci_new=1).</summary>
+        public static bool Requires(RuntimeTemplate t, string key, double value)
+        {
+            if (t != null) foreach (var c in t.Checks) if (c.Key == key && c.Value.Key == "=" && c.Value.Value == value) return true;
+            return false;
+        }
+
         public static int SpecialChecks(RuntimeTemplate t)
         {
             int n = 0;
@@ -881,6 +888,23 @@ namespace Lonapse
             if (string.IsNullOrEmpty(subjectId)) return "";
             int at = subjectId.IndexOf('@');
             return at > 0 ? subjectId.Substring(0, at) : subjectId;
+        }
+
+        /// <summary>The situation words in a subject id (crewReport@KerbinFlyingLowShores), in the order of
+        /// ScienceSituation: 1 landed, 2 splashed, 3 flying low, 4 flying high, 5 space low, 6 space high.</summary>
+        static readonly string[] SituationWords = { "SrfLanded", "SrfSplashed", "FlyingLow", "FlyingHigh", "InSpaceLow", "InSpaceHigh" };
+
+        /// <summary>{sci_sit} of a subject: 1 landed, 2 splashed, 3 flying low, 4 flying high, 5 in space low, 6 in
+        /// space high. 0 when the id has no situation (an asteroid or a mod's subject).</summary>
+        public static int ScienceSituation(string subjectId)
+        {
+            if (string.IsNullOrEmpty(subjectId)) return 0;
+            int at = subjectId.IndexOf('@');
+            if (at < 0) return 0;
+            string rest = subjectId.Substring(at + 1);
+            for (int i = 0; i < SituationWords.Length; i++)
+                if (rest.IndexOf(SituationWords[i], StringComparison.Ordinal) >= 0) return i + 1;
+            return 0;
         }
 
         /// <summary>Spanish and English words of an experiment. Unknown (modded) ids: "los datos" style generic words.

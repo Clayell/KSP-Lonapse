@@ -89,6 +89,23 @@ namespace Lonapse
             return DcMath.Clamp01((float)(1.0 - prod));
         }
 
+        // During reentry, spin, G, pressure, heat and plasma often describe the same atmospheric pass.
+        // Take the strongest of them so a controlled descent does not panic just because they overlap.
+        public static float CombineReentry(float[] c, float[] w)
+        {
+            float atmospheric = 0f;
+            double other = 1.0;
+            for (int i = 0; i < c.Length && i < w.Length; i++)
+            {
+                float x = DcMath.Clamp01(w[i]) * DcMath.Clamp01(c[i]);
+                if (i == Spin || i == GForce || i == Q || i == Heat || i == Plasma)
+                    atmospheric = Math.Max(atmospheric, x);
+                else
+                    other *= 1.0 - x;
+            }
+            return DcMath.Clamp01((float)(1.0 - (1.0 - atmospheric) * other));
+        }
+
         public static float GroundComponent(bool landed, double vs, double h, Tuning tu)
         {
             if (landed || vs >= 0 || h >= tu.groundMaxH) return 0f;
@@ -195,7 +212,7 @@ namespace Lonapse
             // on EVA nothing hits the kerbal: hops and bumps are no impulse
             comp[Impulse] = (suppressImpulse || s.eva) ? 0f : impulse;
 
-            raw = Combine(comp, weight);
+            raw = s.classifiedPhase == FlightPhase.Reentry ? CombineReentry(comp, weight) : Combine(comp, weight);
             // sudden events only: impulses and an imminent ground impact
             for (int i = 0; i < fastComp.Length; i++) fastComp[i] = (i == Impulse || i == Ground) ? comp[i] : 0f;
             float rawFast = Combine(fastComp, weight);

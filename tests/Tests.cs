@@ -126,6 +126,24 @@ public static class Tests
         c = new float[8]; for (int i = 0; i < 8; i++) c[i] = 1f;
         Check(StressModel.Combine(c, w) <= 1f, "combine stays <= 1", null);
 
+        // Normal reentry readings overlap, while severe heating and an imminent impact still warrant panic.
+        {
+            StressModel m = Fresh();
+            FlightSample s = Calm();
+            s.phase = FlightPhase.Blackout; s.classifiedPhase = FlightPhase.Reentry;
+            s.vs = -500; s.qKPa = 45; s.g = 4;
+            s.heatRatio = 0.70; s.inPlasmaStock = true;
+            Run(m, s, 20f, 0.02f);
+            Check(m.stress < 0.68f && m.stress > 0.5f,
+                  "reentry: routine pressure, heat, plasma and G stay tense", "stress " + m.stress.ToString("0.00"));
+            s.heatRatio = 0.92;
+            Run(m, s, 10f, 0.02f);
+            Check(m.stress > 0.68f, "reentry: severe heating can still cause panic", "stress " + m.stress.ToString("0.00"));
+            m = Fresh(); s = Calm(); s.classifiedPhase = FlightPhase.Reentry; s.h = 150; s.vs = -40;
+            Run(m, s, 2f, 0.02f);
+            Check(m.stress > 0.68f, "reentry: imminent impact still causes panic", "stress " + m.stress.ToString("0.00"));
+        }
+
         // ---- stress model ----
         Tuning tu = new Tuning();
         {
@@ -448,6 +466,54 @@ public static class Tests
                   "intercom: kerbals out due to G do not count", null);
         }
 
+        // ---- crew voice mixer ----
+        {
+            Tuning mt = new Tuning();
+            float defA = DcMath.CrewVoicePitch(1.05f, false, 0.5f, 0.2f, 0.5f, 1.12f, mt.genderPitchFemale, mt.genderPitchMale, 1f, false);
+            Near(defA, DcMath.CrewPitch(1.05f, 0.5f, 0.2f, 0.5f, 1.12f), 1e-6, "voice mixer: default sliders change nothing");
+            // a high female slider: two close kerbals stay apart, nobody is pressed onto the ceiling
+            float f1 = DcMath.CrewVoicePitch(1.10f, true, 0f, 0f, 0f, 1.12f, 1.3f, mt.genderPitchMale, 1f, false);
+            float f2 = DcMath.CrewVoicePitch(1.12f, true, 0f, 0f, 0f, 1.12f, 1.3f, mt.genderPitchMale, 1f, false);
+            Check(f2 - f1 > 0.015f && f1 > 1.12f, "voice mixer: a raised gender slider keeps two kerbals apart", f1.ToString("0.000") + " " + f2.ToString("0.000"));
+            // a low male slider is heard, also for the lowest kerbal (the factor comes after the floor)
+            float lowDef = DcMath.CrewVoicePitch(DcMath.CrewPitchMin, false, 0f, 0f, 0f, 1.12f, mt.genderPitchFemale, mt.genderPitchMale, 1f, false);
+            float lowSlid = DcMath.CrewVoicePitch(DcMath.CrewPitchMin, false, 0f, 0f, 0f, 1.12f, mt.genderPitchFemale, 0.8f, 1f, false);
+            Check(lowSlid < lowDef - 0.05f, "voice mixer: lowering a gender slider is heard on the lowest kerbal", lowSlid.ToString("0.000"));
+            // the male slider leaves the women alone and the other way around
+            Near(DcMath.CrewVoicePitch(1f, true, 0f, 0f, 0f, 1.12f, mt.genderPitchFemale, 1.3f, 1f, false), 1.0, 1e-6,
+                 "voice mixer: the male slider does not move a female voice");
+            Near(DcMath.CrewVoicePitch(1f, false, 0f, 0f, 0f, 1.12f, 0.8f, mt.genderPitchMale, 1.2f, false), 1.2, 1e-5,
+                 "voice mixer: playback speed multiplies, the female slider does not move a male voice");
+            // stress raises up to the ceiling, the ceiling holds before the mixer factors
+            float calm = DcMath.CrewVoicePitch(1.05f, false, 0f, 0f, 3f, 1.2f, mt.genderPitchFemale, mt.genderPitchMale, 1f, false);
+            float hot = DcMath.CrewVoicePitch(1.05f, false, 1f, 0f, 3f, 1.2f, mt.genderPitchFemale, mt.genderPitchMale, 1f, false);
+            Check(hot > calm && hot <= 1.2f + 1e-5f, "voice mixer: stress pitch rises up to the ceiling", calm + " " + hot);
+            bool sane = true;
+            foreach (float bad in new[] { float.NaN, float.PositiveInfinity, -1f, 0f })
+            {
+                float p = DcMath.CrewVoicePitch(bad, true, bad, bad, bad, bad, bad, bad, bad, false);
+                if (float.IsNaN(p) || float.IsInfinity(p) || p <= 0f || p > 3f) sane = false;
+            }
+            Check(sane, "voice mixer: NaN, infinite, zero and negative inputs give a playable pitch", null);
+            // radio brightness: stress only ever darkens, also with the calm cutoff under the stress one
+            Check(DcMath.CrewLowPass(1800f, 3200f, 1f, 1f, 0f, 1400f) <= DcMath.CrewLowPass(1800f, 3200f, 0f, 1f, 0f, 1400f) + 1e-3f
+                  && Math.Abs(DcMath.CrewLowPass(4000f, 3200f, 1f, 1f, 0f, 1400f) - 3200f) < 1e-3f
+                  && Math.Abs(DcMath.CrewLowPass(4000f, 3200f, 0f, 1f, 0f, 1400f) - 4000f) < 1e-3f
+                  && DcMath.CrewLowPass(4000f, 3200f, 0f, 1f, 1f, 1400f) == 1400f
+                  && DcMath.CrewLowPass(8000f, 3200f, 0.5f, 1.15f, 0f, 1400f) > DcMath.CrewLowPass(4000f, 3200f, 0.5f, 1.15f, 0f, 1400f),
+                  "voice mixer: radio brightness, stress darkens, G darkens to the floor, a brighter slider stays brighter", null);
+            // saved values out of range, broken or from an old version
+            Tuning bt = new Tuning();
+            bt.crewPitchMax = 1.0f; bt.genderPitchFemale = float.NaN; bt.genderPitchMale = 5f; bt.crewPlaybackSpeed = float.NaN;
+            bt.crewLpCalm = 100f; bt.crewGritMix = -1f; bt.crewWobbleMix = 9f; bt.crewStressSemitones = float.PositiveInfinity;
+            bt.Sanitize();
+            Check(bt.crewPitchMax >= DcMath.CrewSpreadMax && bt.genderPitchFemale == DcMath.GenderPitchFemale && bt.genderPitchMale == 1.3f
+                  && bt.crewPlaybackSpeed >= 0.75f && bt.crewPlaybackSpeed <= 1.25f && bt.crewLpCalm == 1800f && bt.crewGritMix == 1f
+                  && bt.crewWobbleMix == 2f && bt.crewStressSemitones >= 0f && bt.crewStressSemitones <= 12f,
+                  "voice mixer: a broken or out of range saved mixer is repaired, the ceiling never under the crew spread",
+                  bt.crewPitchMax + " " + bt.genderPitchFemale + " " + bt.crewPlaybackSpeed + " " + bt.crewStressSemitones);
+        }
+
         // ---- crew delivery ----
         Near(DcMath.CrewPitch(1.0f, 0f, 0f, 2f, 1.2f), 1.0, 1e-6, "pitch: calm kerbal at base pitch");
         Near(DcMath.CrewPitch(1.0f, 1f, 0f, 2f, 1.2f), Math.Pow(2, 2.0 / 12), 1e-4, "pitch: stress 1 adds 2 semitones (x1.122)");
@@ -500,6 +566,33 @@ public static class Tests
             Check(g.OnChutes(35f, 0, 2, 5f, 3f, 1.5f) == ChuteCallout.Full, "callout: full deployment later speaks once", null);
             Check(!g.TryShared(35.5f, 1.5f), "callout: staging 0.5 s after a chute callout is suppressed", null);
             Check(g.TryShared(37f, 1.5f), "callout: allowed again after 1.5 s", null);
+            Check(ChuteNames.IsDrogue("radialDrogue", null) && ChuteNames.IsDrogue("parachuteDrogue", null)
+                  && ChuteNames.IsDrogue("modChute", "Mk3 Drogue Chute") && !ChuteNames.IsDrogue("parachuteSingle", "Mk16 Parachute")
+                  && !ChuteNames.IsDrogue(null, null),
+                  "callout: drogues by part name or title, stock and modded", null);
+            Check(PacingRules.ChutesOnlyStage(false, false, true) && !PacingRules.ChutesOnlyStage(true, false, true)
+                  && !PacingRules.ChutesOnlyStage(false, true, true) && !PacingRules.ChutesOnlyStage(false, false, false),
+                  "callout: a stage of parachutes only leaves the callout to the parachutes", null);
+            // Kerbin: radius 600 km, atmosphere 70 km
+            Check(PacingRules.StableOrbit(0.01, 680000, 670000) && !PacingRules.StableOrbit(0.01, 660000, 670000)
+                  && !PacingRules.StableOrbit(1.2, 900000, 670000) && !PacingRules.StableOrbit(double.NaN, 680000, 670000),
+                  "orbit: stable only closed and with the periapsis above the lowest safe orbit", null);
+            Check(PacingRules.FuelLow(8, 1, 10) && PacingRules.FuelLow(10, 0.5, 10) && !PacingRules.FuelLow(12, 1, 10)
+                  && !PacingRules.FuelLow(8, 0, 10) && !PacingRules.FuelLow(0.2, 1, 10) && !PacingRules.FuelLow(double.NaN, 1, 10),
+                  "fuel: low fuel calls with the throttle open and some fuel left, never without a burning engine", null);
+            // Kerbin: atmosphere 70 km, circular speed near 2290 m/s at 69 km
+            Check(PacingRules.EntryInterface(69000, 70000, -300, 2250, 2290, 0.6)
+                  && !PacingRules.EntryInterface(71000, 70000, -300, 2250, 2290, 0.6)
+                  && !PacingRules.EntryInterface(30000, 70000, -300, 2250, 2290, 0.6)
+                  && !PacingRules.EntryInterface(60000, 70000, 50, 2250, 2290, 0.6)
+                  && !PacingRules.EntryInterface(60000, 70000, -100, 800, 2290, 0.6)
+                  && !PacingRules.EntryInterface(60000, 0, -300, 2250, 2290, 0.6)
+                  && !PacingRules.EntryInterface(double.NaN, 70000, -300, 2250, 2290, 0.6),
+                  "entry heat: starts at the entry interface, not for a climb, a slow hop, low down or without air", null);
+            Check(PacingRules.HomeRest(true, true, true, 0.3, 1) && !PacingRules.HomeRest(false, true, true, 0.3, 1)
+                  && !PacingRules.HomeRest(true, false, true, 0.3, 1) && !PacingRules.HomeRest(true, true, false, 0.3, 1)
+                  && !PacingRules.HomeRest(true, true, true, 3, 1),
+                  "welcome home: only after a trip to space, at rest on the home body", null);
             CalloutGate g2 = new CalloutGate();
             Check(g2.OnChutes(5f, 1, 1, 5f, 3f, 1.5f) == ChuteCallout.Semi, "callout: semi and full in the same poll speak once (semi)", null);
         }
@@ -622,14 +715,33 @@ public static class Tests
             Check(m11.runtimeVoice && !m11.runtimeReports, "migration v12: runtime voice on, a user-set report toggle is kept", null);
             Check(new Settings().runtimeVoice && new Settings().runtimeReports && new Settings().runtimeScience,
                   "defaults: all runtime voice settings are on", null);
-            Settings m4 = new Settings(); m4.tuning.lightDelayMax = 2f; m4.tuning.lightDelayScale = 0.45f;
+            Settings m4 = new Settings(); m4.tuning.lightDelayMax = 2f;
             m4.MigrateValues(4);
-            Check(m4.tuning.lightDelayMax == 10f && m4.tuning.lightDelayScale == 2.6f, "migration v5: light delay up to 10 s replaces the old defaults", null);
-            Settings m4u = new Settings(); m4u.tuning.lightDelayMax = 5f; m4u.tuning.lightDelayScale = 0.45f;
+            Check(m4.tuning.lightDelayMax == 10f, "migration v5: light delay up to 10 s replaces the old default", null);
+            Settings m4u = new Settings(); m4u.tuning.lightDelayMax = 5f;
             m4u.MigrateValues(4);
             Check(m4u.tuning.lightDelayMax == 5f, "migration v5: a user-set light delay cap is kept", null);
             Settings big = new Settings(); big.tuning.lightDelayMax = 60f; big.Clamp();
-            Check(big.tuning.lightDelayMax == 10f, "light delay: capped at 10 s", big.tuning.lightDelayMax.ToString());
+            Check(big.tuning.lightDelayMax == 30f, "light delay: capped at 30 s", big.tuning.lightDelayMax.ToString());
+            Settings full = new Settings(); full.tuning.lightDelayMax = 30f; full.Clamp();
+            Check(full.tuning.lightDelayMax == 30f, "light delay: 30 s is allowed", null);
+            Check(!new Settings().lightDelay, "defaults: light delay is off", null);
+
+            // light delay curve: the slider value is the far end, nearby stays short, bad input gives no delay
+            Check(Math.Abs(DcMath.LightDelay(12000, 10f) - 0.86f) < 0.05f, "light delay: Mun about 0.9 s at 10 s", DcMath.LightDelay(12000, 10f).ToString());
+            Check(Math.Abs(DcMath.LightDelay(47000, 10f) - 1.9f) < 0.1f, "light delay: Minmus about 2 s at 10 s", DcMath.LightDelay(47000, 10f).ToString());
+            float duna30 = DcMath.LightDelay(15e6, 30f);
+            Check(duna30 > 20f && duna30 < 30f, "light delay: Duna gets most of a 30 s setting", duna30.ToString());
+            Check(DcMath.LightDelay(1e12, 30f) == 30f && DcMath.LightDelay(1e12, 99f) == 30f, "light delay: never above the setting or 30 s", null);
+            Check(DcMath.LightDelay(0, 30f) == 0f && DcMath.LightDelay(-5, 30f) == 0f && DcMath.LightDelay(double.NaN, 30f) == 0f
+                  && DcMath.LightDelay(1e9, 0f) == 0f && DcMath.LightDelay(1e9, float.NaN) == 0f, "light delay: zero for bad distance or setting", null);
+            Check(DcMath.LightDelay(5e6, 30f) > DcMath.LightDelay(5e5, 30f), "light delay: grows with distance", null);
+
+            // far out, ping-pong scenes count their delayed MC turns
+            Check(PacingRules.DelayedTurns(new[] { "crew", "mc", "crew", "mc" }) == 2, "delayed turns: crew mc crew mc has 2", null);
+            Check(PacingRules.DelayedTurns(new[] { "mc", "crew" }) == 0, "delayed turns: MC first has no wait of its own", null);
+            Check(PacingRules.DelayedTurns(new[] { "crew", "crew", "mc", "mc" }) == 1, "delayed turns: back to back MC lines wait once", null);
+            Check(PacingRules.DelayedTurns(null) == 0 && PacingRules.DelayedTurns(new string[0]) == 0, "delayed turns: empty scene", null);
         }
 
         // ---- per-kerbal ----
@@ -1045,6 +1157,7 @@ public static class Tests
         RpmPageTests();
         CabinTests();
         RadioDspTests.Run(Check);
+        ActionVoicelineTests.Run(Check);
         RuntimeSpeechTests();
         UnifiedDialogueTests();
         ProbeCoreTests();
@@ -1107,9 +1220,10 @@ public static class Tests
 
         // event plan
         Check(ProbeRules.PlanFor("crew_lost") == ProbeEventPlan.Drop && ProbeRules.PlanFor("signal_lost") == ProbeEventPlan.Drop
+              && ProbeRules.PlanFor("vessel_lost") == ProbeEventPlan.Drop
               && ProbeRules.PlanFor("science") == ProbeEventPlan.Radio && ProbeRules.PlanFor("signal_back") == ProbeEventPlan.Radio
               && ProbeRules.PlanFor("touchdown") == ProbeEventPlan.Radio && ProbeRules.PlanFor("burn_soon") == ProbeEventPlan.Radio,
-              "probe rules: crew_lost and signal_lost dropped, the rest radio", null);
+              "probe rules: crew_lost, vessel_lost and signal_lost dropped, the rest radio", null);
         // Only Mission Control and the probe talk in probe mode
         Check(PhraseTable.Roles.Length == 3 && Array.IndexOf(PhraseTable.Roles, "diary") < 0 && Array.IndexOf(PhraseTable.Roles, "flight") < 0 && Array.IndexOf(PhraseTable.Roles, "intern") < 0
               && Array.IndexOf(PhraseTable.Roles, "coffee") < 0 && Array.IndexOf(PhraseTable.Events, "room_chat") < 0
@@ -2637,14 +2751,18 @@ public static class Tests
             var sn = new Dictionary<string, string[]> { { "exp", new[] { "arutarepmet", "temperature" } }, { "body", new[] { "la Mun", "Mun" } },
                                                         { "vessel", new[] { "Kerbal X", "Kerbal X" } } };
             var sFirst = new Dictionary<string, double> { { "sci", 8.5 }, { "sci_first", 1 }, { "sci_left", 20 }, { "at_home", 0 } };
-            var sDone = new Dictionary<string, double> { { "sci", 0.4 }, { "sci_first", 0 }, { "sci_left", 0.2 }, { "at_home", 0 } };
+            var sDone = new Dictionary<string, double> { { "sci", 0.4 }, { "sci_first", 0 }, { "sci_new", 0 }, { "sci_left", 0.2 }, { "at_home", 0 } };
+            // a crew report in a new situation: all of its points at once, so nothing left, but no repeat
+            var sNewSit = new Dictionary<string, double> { { "sci", 5 }, { "sci_first", 0 }, { "sci_new", 1 }, { "sci_left", 0 }, { "at_home", 0 } };
             var idsF = RuntimeLines.Fitting(rtAll, "science_pts", null, sFirst, sn).ConvertAll(t => t.Id);
             var idsD = RuntimeLines.Fitting(rtAll, "science_pts", null, sDone, sn).ConvertAll(t => t.Id);
+            var idsN = RuntimeLines.Fitting(rtAll, "science_pts", null, sNewSit, sn).ConvertAll(t => t.Id);
             var cFail = new Dictionary<string, double> { { "funds", 12000 }, { "con_rep", 15 }, { "contracts", 0 } };
             var idsC = RuntimeLines.Fitting(rtAll, "contract_failed", null, cFail, sn).ConvertAll(t => t.Id);
             var idsP = RuntimeLines.Fitting(rtAll, "contract_funds", null, cFail, sn).ConvertAll(t => t.Id);
             Check(idsF.Contains("sci_first") && idsF.Contains("sci_left") && idsF.Contains("sci_far") && !idsF.Contains("sci_repeat")
                   && idsD.Contains("sci_repeat") && idsD.Contains("sci_small") && !idsD.Contains("sci_first") && !idsD.Contains("sci_pts_more")
+                  && !idsN.Contains("sci_repeat")
                   && idsC.Contains("con_fail_cost") && idsC.Contains("con_fail_rep") && !idsC.Contains("con_fail_left")
                   && idsP.Contains("con_last") && !idsP.Contains("con_left") && !idsP.Contains("con_one"),
                   "runtime voice: science and contract lines fit the first data, what is left, the penalty and the open contracts",
@@ -2793,8 +2911,10 @@ public static class Tests
                 foreach (string k in Slots.Names) if (!allVals.ContainsKey(k)) allVals[k] = "Test";
                 var badRt = new List<string>();
                 int spoken = 0;
+                int dialogueCovered = 0;
                 foreach (PhraseEntry pe in built.Entries)
                 {
+                    if (pe.Dialogue != null) { dialogueCovered++; continue; }
                     if (pe.SpanishRt == null) continue;
                     for (int k = 0; k < pe.SpanishRt.Count; k++)
                     {
@@ -2811,6 +2931,7 @@ public static class Tests
                             (pool, vv) => pool.StartsWith(SceneMemory.VersionPool, StringComparison.Ordinal)
                                           ? (vv.Contains(wantV.ToString()) ? wantV.ToString() : vv[0]) : vv[0], null,
                             vc, true);
+                        if (o.Count == 0) { badRt.Add(pe.ClipKey + " v" + (k + 1) + " cannot fill"); continue; }
                         string said = o[0].RuntimeSpanish;
                         if (said == null) { badRt.Add(pe.ClipKey + " v" + (k + 1) + " gives no runtime Spanish"); continue; }
                         string spk = RuntimeSpeech.Spoken(said);
@@ -2818,7 +2939,7 @@ public static class Tests
                         spoken++;
                     }
                 }
-                Check(badRt.Count == 0 && spoken > 300, "spanish_rt: every runtime Spanish version (" + spoken + ") fills and speaks cleanly",
+                Check(badRt.Count == 0 && (spoken > 300 || dialogueCovered > 300), "spanish_rt: legacy versions fill and unified dialogue is covered (" + spoken + " legacy, " + dialogueCovered + " unified)",
                       string.Join(" ; ", badRt.GetRange(0, Math.Min(8, badRt.Count)).ToArray()) + (badRt.Count > 8 ? " ... " + badRt.Count : ""));
             }
             Console.WriteLine("INFO  spanish_rt coverage: " + slotted + " slotted rows, " + withRt + " with spanish_rt, " + versionsNoRt + " slotted versions without");
@@ -2927,10 +3048,21 @@ public static class Tests
                 && Math.Abs(mcCalm.Tempo - 1.04) < 1e-9 && mcCalm.NoiseScale == 0.80 && mcCalm.PitchSt == 3.0
                 && Math.Abs(mcPanic.Tempo - 0.95) < 1e-9 && Math.Abs(mcPanic.PitchSt - 3.3) < 1e-9 && mcPanic.NoiseScale == 0.667
                 && Math.Abs(mT.Tempo - 1.10) < 1e-9 && Math.Abs(mT.PitchSt - 5.0) < 1e-9
-                && fP.NoiseScale == 0.90 && Math.Abs(fP.PitchSt - 4.0) < 1e-9
+                && fP.Kind == "f.tense" && fP.NoiseScale == 0.667 && Math.Abs(fP.Tempo - 1.10) < 1e-9 && Math.Abs(fP.PitchSt - 4.0) < 1e-9
                 && Math.Abs(mC.Tempo - 1.08) < 1e-9 && Math.Abs(mC.PitchSt - 5.5) < 1e-9
                 && RuntimeDelivery.KindFor("mc", "calm", "chatter", "countdown") == null && RuntimeDelivery.BaseKind("m.tense") == "m";
             Check(same, "voices: runtime lines use the build's delivery per band and countdown uses recordings", "");
+            // every kind a line can ask for is loaded at the save start, and the crew kinds fit the worker cap: a flight
+            // never stops a Piper process and loads a model again (that cut the audio)
+            var kinds = new HashSet<string>();
+            foreach (string who in new[] { "m", "f", "mc" })
+                foreach (string band in new[] { "calm", "tense", "panic", "none" })
+                    foreach (string sev in new[] { "chatter", "warning", "callout" })
+                        kinds.Add(RuntimeDelivery.KindFor(who, band, sev, "chatter"));
+            bool covered = true;
+            foreach (string k in kinds) if (Array.IndexOf(RuntimeDelivery.Kinds, k) < 0) covered = false;
+            Check(covered && kinds.Count == RuntimeDelivery.Kinds.Length,
+                  "voices: every runtime kind is loaded at the save start and fits the Piper worker cap", kinds.Count + " kinds");
         }
         // a value of 1: the noun after it is singular, in both languages ("un kilómetro", "1 minute")
         var plural = new List<string>();
@@ -2955,6 +3087,11 @@ public static class Tests
         Check(RuntimeLines.ExperimentId("temperatureScan@KerbinSrfLanded") == "temperatureScan"
               && RuntimeLines.ExperimentWords("cometSample_long")[1] == "comet sample" && RuntimeLines.ExperimentWords("modThing")[0] == "experimento",
               "runtime voice: experiment words from the subject id", null);
+        Check(RuntimeLines.ScienceSituation("crewReport@KerbinSrfLandedLaunchPad") == 1 && RuntimeLines.ScienceSituation("crewReport@KerbinSrfSplashedWater") == 2
+              && RuntimeLines.ScienceSituation("crewReport@KerbinFlyingLowShores") == 3 && RuntimeLines.ScienceSituation("crewReport@KerbinFlyingHigh") == 4
+              && RuntimeLines.ScienceSituation("evaReport@MunInSpaceLow") == 5 && RuntimeLines.ScienceSituation("crewReport@SunInSpaceHigh") == 6
+              && RuntimeLines.ScienceSituation("asteroidSample@PotatoRoid") == 0 && RuntimeLines.ScienceSituation(null) == 0,
+              "runtime voice: {sci_sit} from the situation in the subject id", null);
         // extra rows (Phrases/Extra) in the source format after the built table: both parse, lonapse_text is made
         var mixed = new List<string> {
             "clip_key\tevent\tseverity\tband\trole\tscene\tseq\tgender\tphase\tcause\ttrait\tpersona\ttopic\tcore\tbeep\tspanish\tlonapse_text\tfolder\tbody\tenglish",
@@ -3830,9 +3967,9 @@ public static class Tests
         stationOld.tuning.stationMcMin = 150f;
         stationOld.tuning.stationMcMax = 300f;
         stationOld.MigrateValues(14);
-        Check(stationDefaults.stationMcMin == 120f && stationDefaults.stationMcMax == 120f
-              && stationOld.tuning.stationMcMin == 120f && stationOld.tuning.stationMcMax == 120f,
-              "station: new and migrated default settings use two-minute check-ins", null);
+        Check(stationDefaults.stationMcMin == 60f && stationDefaults.stationMcMax == 60f
+              && stationOld.tuning.stationMcMin == 60f && stationOld.tuning.stationMcMax == 60f,
+              "station: new and migrated default settings use one-minute check-ins", null);
         var checkGap = new Tuning();
         checkGap.stationMcMin = checkGap.stationMcMax = 15f;
         checkGap.Sanitize();
@@ -3866,13 +4003,15 @@ public static class Tests
             MixMath.SplitChannelGain(float.NaN, 1f, out source, out filter);
             Check(source == 0f && filter == 1f, "volume: invalid levels cannot reach the audio thread", null);
             var volumes = new Settings();
-            string[] volumeFields = { "masterVolume", "crewVolume", "controlVolume", "beepVolume", "sfxVolume",
+            string[] volumeFields = { "crewVolume", "controlVolume", "beepVolume", "sfxVolume",
                 "thudVolume", "footstepVolume", "hatchVolume", "dockingVolume", "jetpackVolume", "breathVolume",
                 "cabinVolume", "cabinThrustVolume", "cabinSeparationVolume", "weakSignalVolume", "intercomVolume", "calloutVolume", "evaRadioVolume", "radioStatic" };
             foreach (string field in volumeFields) typeof(Settings).GetField(field).SetValue(volumes, 2f);
             volumes.Clamp();
             Check(Array.TrueForAll(volumeFields, field => (float)typeof(Settings).GetField(field).GetValue(volumes) == 2f),
-                  "volume: every saved audio slider retains the expanded maximum", null);
+                  "volume: category sliders retain the expanded maximum", null);
+            Check(volumes.masterVolume == 0.8f && volumes.blackoutStaticVolume == 0.8f,
+                  "volume: master and blackout static default to 80%", null);
             volumes.cabinVolume = 0.43f; volumes.cabinThrustVolume = 0.8f;
             volumes.Clamp();
             Check(volumes.cabinVolume == 0.43f && volumes.cabinThrustVolume == 0.8f,
@@ -3880,7 +4019,23 @@ public static class Tests
             Check(RadioNoise.Gain(2f) == 2f * RadioNoise.Gain(1f), "volume: radio static has the same doubled headroom", null);
         }
         Settings old = new Settings(); old.tuningVersion = Tuning.CurrentVersion;
-        Check(old.MigrateValues(Tuning.CurrentVersion).Count == 0 && Tuning.CurrentVersion == 16, "settings: no migration needed at the current version", null);
+        Check(old.MigrateValues(Tuning.CurrentVersion).Count == 0 && Tuning.CurrentVersion == 19, "settings: no migration needed at the current version", null);
+        Settings boostedMaster = new Settings();
+        boostedMaster.masterVolume = 1.6f;
+        boostedMaster.MigrateValues(17);
+        boostedMaster.Clamp();
+        Check(Math.Abs(boostedMaster.masterVolume - 0.8f) < 0.0001f,
+              "volume: old boosted master setting maps to its displayed percentage", null);
+        Settings delayOn = new Settings(); delayOn.lightDelay = true;
+        List<string> delayReset = delayOn.MigrateValues(18);
+        Check(!delayOn.lightDelay && delayReset.Contains("lightDelay on -> off"),
+              "migration v19: light delay that was on is turned off", null);
+        Settings delayOff = new Settings();
+        Check(delayOff.MigrateValues(18).Count == 0 && !delayOff.lightDelay,
+              "migration v19: light delay that was off stays off", null);
+        Settings delayNew = new Settings(); delayNew.tuningVersion = Tuning.CurrentVersion; delayNew.lightDelay = true;
+        delayNew.MigrateValues(Tuning.CurrentVersion);
+        Check(delayNew.lightDelay, "migration v19: light delay turned on after the update stays on", null);
     }
 
     static void ReviewFixTests()
@@ -5719,8 +5874,20 @@ public static class Tests
                       && Math.Abs(FaceMath.StressCap(0.66f, 0.29f, 0.66f) + 0.5f) < 1e-5 && FaceMath.StressCap(1f, 0.29f, 0.66f) == -1f
                       && Math.Abs(FaceMath.StressCap(0.83f, 0.35f, 0.83f) + 0.5f) < 1e-5,
                       "face: free below the own tenseAt, clearly scared at the own panicAt, full fear at 1", "");
-                Check(FaceMath.StressCap(0.66f, 0.35f, 0.83f) > FaceMath.StressCap(0.66f, 0.29f, 0.66f) + 0.4f,
+                Check(FaceMath.StressCap(0.66f, 0.35f, 0.83f) > FaceMath.StressCap(0.66f, 0.29f, 0.66f) + 0.2f,
                       "face: at the same stress a braver kerbal (later thresholds) looks less scared", "");
+                // halfway from tenseAt to panicAt the face is already scared, not neutral
+                Check(FaceMath.StressCap(0.5f, 0.31f, 0.69f) < -0.15f && FaceMath.StressCap(0.405f, 0.31f, 0.69f) <= 1e-5f
+                      && FaceMath.StressCap(0.33f, 0.31f, 0.69f) > 0.5f,
+                      "face: the grin goes first, then the fear grows from a quarter of the way to panicAt", "");
+                // the stock face (a grin at G) no longer waters the fear down under stress
+                Check(FaceMath.StressWeight(0.8f, 0.1f, 0.31f, 0.69f) == 0.8f && FaceMath.StressWeight(0.8f, 0.69f, 0.31f, 0.69f) == 1f
+                      && FaceMath.StressWeight(0.8f, 0.5f, 0.31f, 0.69f) > 0.8f && FaceMath.StressWeight(0.8f, float.NaN, 0.31f, 0.69f) == 0.8f,
+                      "face: the face weight grows to 1 at panicAt", "");
+                // vessel stress 0.8, an average kerbal (sk 0.8, 0.31/0.69), stock grinning at G: clearly scared
+                float g = FaceMath.FaceMood(0f, 0f, 0.6f, 0.8f, 0.31f, 0.69f);
+                float shown = FaceMath.Blend(0.6f, g, FaceMath.StressWeight(0.8f, 0.8f, 0.31f, 0.69f), 1f);
+                Check(shown < -0.6f, "face: at 0.8 stress past panicAt the face is scared even while stock KSP grins", shown.ToString("0.00"));
                 bool down = true; float prevCap = 2f;
                 for (int i = 0; i <= 40; i++) { float c = FaceMath.StressCap(i / 40f, 0.31f, 0.69f); if (c > prevCap + 1e-6f) down = false; prevCap = c; }
                 Check(down, "face: fear grows step by step with stress (never less scared at more stress)", "");

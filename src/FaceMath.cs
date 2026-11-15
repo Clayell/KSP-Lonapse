@@ -48,10 +48,16 @@ namespace Lonapse
             return Clamp(mood, -Smooth01((stress - 0.2f) / 0.1f), 1f);
         }
 
+        /// <summary>The share of the way from tenseAt to panicAt over which the grin goes: past it the face only gets
+        /// more scared.</summary>
+        public const float GrinFade = 0.25f;
+
         /// <summary>
         /// How happy a face may look at this personal stress (sk, 0..1), anchored to the kerbal's own thresholds, so
-        /// the face matches the voice: free below tenseAt, then down to clearly scared (FaceAtPanic) at
-        /// panicAt, then on to full fear at 1. A brave or badass kerbal has later thresholds, so it stays calm longer.
+        /// the face matches the voice: free below tenseAt, no grin left a quarter of the way to panicAt (GrinFade),
+        /// then more and more scared down to clearly scared (FaceAtPanic) at panicAt, then on to full fear at 1. A
+        /// brave or badass kerbal has later thresholds, so it stays calm longer.
+        /// The fear used to start only two thirds of the way to panicAt, so a stressed kerbal still looked neutral.
         /// </summary>
         public static float StressCap(float stress, float tenseAt, float panicAt)
         {
@@ -61,7 +67,12 @@ namespace Lonapse
             tenseAt = Clamp(tenseAt, 0f, 0.98f);
             panicAt = Clamp(panicAt, tenseAt + 0.01f, 0.999f);
             if (stress <= tenseAt) return 1f;
-            if (stress <= panicAt) return 1f + (FaceAtPanic - 1f) * (stress - tenseAt) / (panicAt - tenseAt);
+            if (stress <= panicAt)
+            {
+                float q = (stress - tenseAt) / (panicAt - tenseAt);
+                if (q <= GrinFade) return 1f - q / GrinFade;
+                return FaceAtPanic * (q - GrinFade) / (1f - GrinFade);
+            }
             return Clamp(FaceAtPanic + (-1f - FaceAtPanic) * (stress - panicAt) / (1f - panicAt), -1f, 1f);
         }
 
@@ -147,6 +158,19 @@ namespace Lonapse
             float w = Clamp01(weight);
             float target = Clamp(sign < 0f ? -mood : mood, -1f, 1f);
             return Clamp(stock + (target - stock) * w, -1f, 1f);
+        }
+
+        /// <summary>
+        /// The blend weight of the face: the tuning weight (faceWeight) when calm, all the way to 1 at panicAt. The rest
+        /// of the weight is the stock face, and stock KSP grins at speed and G: at 0.8 a scared face and a stock grin
+        /// came out neutral.
+        /// </summary>
+        public static float StressWeight(float weight, float stress, float tenseAt, float panicAt)
+        {
+            weight = Clamp01(weight);
+            if (float.IsNaN(stress) || float.IsNaN(tenseAt) || float.IsNaN(panicAt) || panicAt <= tenseAt) return weight;
+            float q = Smooth01((stress - tenseAt) / (panicAt - tenseAt));
+            return weight + (1f - weight) * q;
         }
 
         /// <summary>Weight ramp with separate rise and fall times in seconds. Result 0..1.</summary>

@@ -32,7 +32,7 @@ namespace Lonapse
             {
                 case "burn_soon": case "plan_node": case "staging": case "throttle_cut": case "throttle_full":
                 case "dock_approach": case "dock_close": case "dock_hard": case "docked":
-                case "touchdown": case "splashdown": case "chute_full": case "chute_semi": case "soi_enter":
+                case "touchdown": case "splashdown": case "chute_full": case "chute_semi": case "chute_drogue": case "soi_enter":
                     return "pilot";
                 case "power_low": case "power_ok": case "part_lost":
                     return "engineer";

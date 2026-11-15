@@ -237,6 +237,7 @@ namespace Lonapse
                 case EventWatchers.PowerLow: case EventWatchers.PowerOk: return c.eventPower;
                 case EventWatchers.SignalLost: case EventWatchers.SignalBack: return c.eventSignal;
                 case EventWatchers.CrewLost: return c.eventCrewLoss;
+                case EventWatchers.VesselLost: return c.eventVesselLoss;
             }
             return Array.IndexOf(PhraseTable.Events, ev) >= 0;
         }
@@ -261,6 +262,8 @@ namespace Lonapse
         {
             if (string.IsNullOrEmpty(r.ev)) return false;
             r.maxAge = EventWatchers.MaxAgeFor(r.ev, r.maxAge, Tu.eventMaxAge); // science 600 s, soi 120 s at most
+            // the vessel is gone and the gate closed: only the final call can play it (UpdateClosedGate)
+            if (r.ev == EventWatchers.VesselLost) return EventEnabled(r.ev) && AddPending(r, "the vessel is gone");
             RemovePending(OppositeOf(r.ev), "superseded by " + r.ev);
             RemovePending(r.ev, null); // a newer request of the same event replaces the waiting one
             // a DeepFreeze group is busy: the event waits a few seconds, its line comes right after the freezer line
@@ -362,17 +365,30 @@ namespace Lonapse
             }
         }
 
-        // ---------------- crew_lost with the gate closed (the whole crew is gone) ----------------
+        // ---------------- crew_lost and vessel_lost with the gate closed ----------------
         // When the last kerbal dies the gate closes (no crew, vessel destroyed, no vessel) and nothing else may play.
         // A pending crew_lost then plays its MC-only call here: quindar in, one MC line, quindar out on the control
         // channel with the radio profile, and its subtitle. LonapseAddon lets only the control channel through for it
         // (FinalCallActive) while the gate stays closed. Then the somber mood starts.
+        // A crashed probe (vessel_lost, probe mode) gets the same call with its own lines, without the somber mood.
+
+        /// <summary>From the addon: the active probe blew up (probe mode). Mission Control calls it lost once the hard
+        /// silence has run.</summary>
+        public void OnVesselLost()
+        {
+            Log.Info("Event vessel_lost: the probe crashed");
+            PlayEvent(EventWatchers.Make(EventWatchers.VesselLost, "tense", EventWatchers.Any, "", false,
+                                         EventWatchers.VesselLostMaxAge, EventPriority.VesselLost));
+        }
+
+        static bool FinalEvent(string ev) { return ev == EventWatchers.CrewLost || ev == EventWatchers.VesselLost; }
 
         private enum FinalStep { None, Preparing, QuindarIn, Line, QuindarOut }
         private FinalStep finalStep = FinalStep.None;
         private float finalRequested;
         private int finalGeneration;
         private PhraseEntry finalEntry;
+        private string finalEvent;
 
         /// <summary>The closed-gate crew_lost call is playing: the control channel stays on.</summary>
         public bool FinalCallActive { get { return finalStep != FinalStep.None; } }
@@ -390,14 +406,14 @@ namespace Lonapse
             if (finalStep != FinalStep.None) { StepFinalCall(allowed); return; }
             if (!allowed || pendingEvents.Count == 0) return;
             Settings c = host.settings;
-            if (c == null || !c.enabled || c.muted || !c.radioEnabled || !c.eventCrewLoss || !PhraseClips.Loaded) return;
+            if (c == null || !c.enabled || c.muted || !c.radioEnabled || !PhraseClips.Loaded) return;
             if (host.control == null || host.control.Busy) return;
             int idx = -1;
             float now = RealNow;
             for (int i = pendingEvents.Count - 1; i >= 0; i--)
             {
                 PendingEvent p = pendingEvents[i];
-                if (p.r.ev != EventWatchers.CrewLost) continue;
+                if (!FinalEvent(p.r.ev) || !EventEnabled(p.r.ev)) continue;
                 if (now - p.since > p.r.maxAge)
                 {
                     lastEventResult = p.r.ev + " expired after " + p.r.maxAge.ToString("0") + " s (" + p.why + ")";
@@ -408,16 +424,18 @@ namespace Lonapse
                 idx = i;
             }
             if (idx < 0) return;
+            string ev = pendingEvents[idx].r.ev;
             pendingEvents.RemoveAt(idx);
-            PhraseScene sc = PickFinalScene();
+            PhraseScene sc = PickFinalScene(ev);
             PhraseEntry e = sc != null ? FirstLine(sc) : null;
             if (e == null || e.Role != "mc")
             {
-                lastEventResult = "crew_lost dropped: no MC-only line for the closed gate";
+                lastEventResult = ev + " dropped: no MC-only line for the closed gate";
                 Log.Info("Event " + lastEventResult);
                 return;
             }
             finalEntry = e;
+            finalEvent = ev;
             finalStep = FinalStep.Preparing;
             finalRequested = RealNow;
             int generation = ++finalGeneration;
@@ -433,14 +451,15 @@ namespace Lonapse
             });
         }
 
-        /// <summary>A one-line MC crew_lost scene (tense first, then any band). Phase is not checked: the flight is over.</summary>
-        private PhraseScene PickFinalScene()
+        /// <summary>A one-line MC scene of the event (crew_lost or vessel_lost, tense first, then any band). Phase is
+        /// not checked: the flight is over.</summary>
+        private PhraseScene PickFinalScene(string ev)
         {
             // a real clip: the final call plays it directly, not through the runtime voice
             Predicate<PhraseScene> one = x => PhraseClips.Playable(x) && !x.IsProbe && x.Lines.Count == 1 && x.McLines == 1
                                               ;
-            PhraseScene sc = Mem.Take(PhraseClips.table.ScenesFor(EventWatchers.CrewLost, "tense", one), rng, lastSceneId);
-            if (sc == null) sc = Mem.Take(PhraseClips.table.ScenesFor(EventWatchers.CrewLost, null, one), rng, lastSceneId);
+            PhraseScene sc = Mem.Take(PhraseClips.table.ScenesFor(ev, "tense", one), rng, lastSceneId);
+            if (sc == null) sc = Mem.Take(PhraseClips.table.ScenesFor(ev, null, one), rng, lastSceneId);
             if (sc != null) lastSceneId = sc.Id;
             return sc;
         }
@@ -502,8 +521,8 @@ namespace Lonapse
             lastLine = "MC: " + e.ClipKey + " (final call)";
             Audit.Add(lastLine);
             finalStep = FinalStep.Line;
-            StartSomber("crew lost");
-            lastEventResult = "crew_lost played (gate closed)";
+            if (finalEvent != EventWatchers.VesselLost) StartSomber("crew lost");
+            lastEventResult = (finalEvent ?? EventWatchers.CrewLost) + " played (gate closed)";
         }
 
         private void EndFinalCall(string why)
@@ -512,7 +531,8 @@ namespace Lonapse
             finalStep = FinalStep.None;
             finalGeneration++;
             finalEntry = null;
-            Log.Info("Crew lost final call " + why);
+            Log.Info("Final call (" + (finalEvent ?? EventWatchers.CrewLost) + ") " + why);
+            finalEvent = null;
         }
 
         /// <summary>HardReset: a hard silence or a reopened gate ends the closed-gate call.</summary>
@@ -684,7 +704,7 @@ namespace Lonapse
                 if (sc.CrewLines == 0 && host.roster.AnyoneCanSpeak() && rng.NextDouble() < 0.5)
                 {
                     PhraseScene crew = PickEventScene(r, x => x.McLines == 0 && x.CrewLines == 1);
-                    if (crew != null) EnqueueRadioScene(crew, null, ResponseDelay(s) + U(0.5f, 1.5f));
+                    if (crew != null) EnqueueRadioScene(crew, null, LocalResponseDelay(s) + U(0.5f, 1.5f));
                 }
                 Log.Info("Event crew_lost: scene " + sc.Id);
                 return null;

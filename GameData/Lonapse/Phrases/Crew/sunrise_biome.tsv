@@ -18,6 +18,18 @@ biome_landed	biome_landed	biome_landed	1	mission_control	report	radio			landed	0
 biome_landed__v02	biome_landed	biome_landed	1	mission_control	report	radio			landed	0	{biome}. Buen sitio para aparcar.	{biome}. Nice place to park.	calm	chatter	both	any	any	any	any	any	any						
 re_biome	re_biome	re_biome	1	kerbal_a	reply	radio		biome*		0	Ya lo vemos. Muy bonito. Muy marrón.	We see it. Very pretty. Very brown.	calm	chatter	both	any	any	any	any	any	any						
 re_biome__v02	re_biome	re_biome	1	kerbal_a	reply	radio		biome*		0	¿{biome}? ¿Quién pone estos nombres?	{biome}? Who comes up with these names?	calm	chatter	both	any	any	any	any	any	any						
+re_biome__v03	re_biome	re_biome	1	kerbal_a	reply	radio		biome*		0	Recibido. Desde aquí parece un mapa sin nombres.	Copy. From up here it looks like a map without names.	calm	chatter	both	any	any	any	any	any	any						
+re_biome__v04	re_biome	re_biome	1	kerbal_a	reply	radio		biome*		0	Lo vemos pasar. Saludamos con la mano.	We see it go by. We're waving.	calm	chatter	both	any	any	any	any	any	any						
+re_biome__v05	re_biome	re_biome	1	kerbal_a	reply	radio		biome*		0	¿{biome}? Yo lo llamaría la zona aburrida.	{biome}? I'd call it the boring part.	calm	chatter	both	any	any	any	any	any	any						
+re_biome__v06	re_biome	re_biome	1	kerbal_a	reply	radio		biome*		0	Visto. Parece más pequeño que en el mapa.	Seen. It looks smaller than on the map.	calm	chatter	both	any	any	any	any	any	any						
+re_biome__v07	re_biome	re_biome	1	kerbal_a	reply	radio		biome*		0	Anotado. Algún día bajaremos a verlo.	Noted. Someday we'll go down and see it.	calm	chatter	both	any	any	any	any	any	any						
+re_biome__v08	re_biome	re_biome	1	kerbal_a	reply	radio		biome*		0	Ah, {biome}. Me lo imaginaba más verde.	Ah, {biome}. I pictured it greener.	calm	chatter	both	any	any	any	any	any	any						
+re_biome__v09	re_biome	re_biome	1	kerbal_a	reply	radio		biome*		0	Gracias por el tour, Control.	Thanks for the tour, Control.	calm	chatter	both	any	any	any	any	any	any						
+re_biome__v10	re_biome	re_biome	1	kerbal_a	reply	radio		biome*		0	Ya lo tengo en la ventana. Precioso.	I've got it in the window. Beautiful.	calm	chatter	both	any	any	any	any	any	any						
+re_biome_landed	re_biome_landed	re_biome_landed	1	kerbal_a	reply	radio		biome_landed		0	Sí, aquí estamos. Las vistas son mejores en persona.	Yes, here we are. The views are better in person.	calm	chatter	both	any	any	any	any	any	any						
+re_biome_landed__v02	re_biome_landed	re_biome_landed	1	kerbal_a	reply	radio		biome_landed		0	{biome}. Ya lo estamos explorando.	{biome}. We're already exploring it.	calm	chatter	both	any	any	any	any	any	any						
+re_biome_landed__v03	re_biome_landed	re_biome_landed	1	kerbal_a	reply	radio		biome_landed		0	Confirmado. El suelo aguanta, que es lo importante.	Confirmed. The ground holds, which is what matters.	calm	chatter	both	any	any	any	any	any	any						
+re_biome_landed__v04	re_biome_landed	re_biome_landed	1	kerbal_a	reply	radio		biome_landed		0	Buen sitio. Lo dejaremos como lo encontramos.	Nice spot. We'll leave it as we found it.	calm	chatter	both	any	any	any	any	any	any						
 chat_sunrise_1	chat_sunrise_1	chat_sunrise	1	kerbal_a	chat	intercom			orbit sunrises>=3	0	{other}, llevamos {sunrises} amaneceres.	{other}, that's {sunrises} sunrises.	calm	chatter	both	any	any	any	any	any	any						
 chat_sunrise_1__v02	chat_sunrise_1	chat_sunrise	1	kerbal_a	chat	intercom			orbit sunrises>=3	0	Ya he visto {sunrises} amaneceres en este vuelo.	I've seen {sunrises} sunrises this flight.	calm	chatter	both	any	any	any	any	any	any						
 chat_sunrise_2	chat_sunrise_2	chat_sunrise	2	kerbal_b	chat	intercom				0	Y yo sigo con sueño.	And I'm still sleepy.	calm	chatter	both	any	any	any	any	any	any						

@@ -167,12 +167,17 @@ pa_plasma_t01	pa_plasma_t01	pa_plasma_t01	1	kerbal_a	flight.chatter	radio				0	H
 pa_plasma_t02_1	pa_plasma_t02_1	pa_plasma_t02	1	kerbal_a	flight.chatter	radio				0	Control, la señal empieza a fallar.	Control, the signal is starting to break up.	tense	chatter	both	any	plasma	any	any	any	any						
 pa_plasma_t02_2	pa_plasma_t02_2	pa_plasma_t02	2	mission_control	flight.chatter	radio				0	Normal. Es el plasma. Os esperamos al otro lado.	Normal. It's the plasma. See you on the other side.	tense	chatter	m	any	plasma	any	any	any	any						
 pa_plasma_t03	pa_plasma_t03	pa_plasma_t03	1	mission_control	flight.chatter	radio				0	Perderemos la radio un rato. Tranquilos.	We'll lose the radio for a while. Easy.	tense	chatter	m	any	plasma	any	any	any	any						
-pa_plasma_p01	pa_plasma_p01	pa_plasma_p01	1	kerbal_a	flight.chatter	radio				0	¡Todo brilla... ahí fuera!	Everything's glowing... out there!	panic	chatter	both	any	plasma	any	any	any	any						
-pa_plasma_p02	pa_plasma_p02	pa_plasma_p02	1	kerbal_a	flight.chatter	radio				0	¡Las ventanas... se han puesto naranja!	The windows... they've gone orange!	panic	chatter	both	any	plasma	any	any	any	any						
-pa_plasma_p03	pa_plasma_p03	pa_plasma_p03	1	kerbal_a	flight.chatter	radio				0	¡Control... os perdemos... la señal!	Control... we're losing you... the signal!	panic	chatter	both	any	plasma	any	any	any	any						
-pa_plasma_p04_1	pa_plasma_p04_1	pa_plasma_p04	1	kerbal_a	flight.chatter	radio				0	¡Plasma por todas partes!	Plasma everywhere!	panic	chatter	both	any	plasma	any	any	any	any						
-pa_plasma_p04_2	pa_plasma_p04_2	pa_plasma_p04	2	mission_control	flight.chatter	radio				0	Lo sabemos. Es normal. Aguantad.	We know. It's normal. Hang on.	panic	chatter	m	any	plasma	any	any	any	any						
-pa_plasma_p05	pa_plasma_p05	pa_plasma_p05	1	kerbal_a	flight.chatter	radio				0	¡Estamos dentro... de una bola brillante!	We're inside... a glowing ball!	panic	chatter	both	any	plasma	any	any	any	any						
+pa_plasma_p01	pa_plasma_p01	pa_plasma_p01	1	kerbal_a	flight.chatter	radio				0	¡Todo brilla... ahí fuera!	Everything's glowing... out there!	tense	chatter	both	any	plasma	any	any	any	any						
+pa_plasma_p02	pa_plasma_p02	pa_plasma_p02	1	kerbal_a	flight.chatter	radio				0	¡Las ventanas... se han puesto naranja!	The windows... they've gone orange!	tense	chatter	both	any	plasma	any	any	any	any						
+pa_plasma_p03	pa_plasma_p03	pa_plasma_p03	1	kerbal_a	flight.chatter	radio				0	¡Control... os perdemos... la señal!	Control... we're losing you... the signal!	tense	chatter	both	any	plasma	any	any	any	any						
+pa_plasma_p04_1	pa_plasma_p04_1	pa_plasma_p04	1	kerbal_a	flight.chatter	radio				0	¡Plasma por todas partes!	Plasma everywhere!	tense	chatter	both	any	plasma	any	any	any	any						
+pa_plasma_p04_2	pa_plasma_p04_2	pa_plasma_p04	2	mission_control	flight.chatter	radio				0	Lo sabemos. Es normal. Aguantad.	We know. It's normal. Hang on.	tense	chatter	m	any	plasma	any	any	any	any						
+pa_plasma_p05	pa_plasma_p05	pa_plasma_p05	1	kerbal_a	flight.chatter	radio				0	¡Estamos dentro... de una bola brillante!	We're inside... a glowing ball!	tense	chatter	both	any	plasma	any	any	any	any						
+pa_plasma_p06	pa_plasma_p06	pa_plasma_p06	1	kerbal_a	flight.chatter	radio				0	¿Hace más calor o solo estoy nervioso?	Is it getting hotter, or am I just nervous?	tense	chatter	both	any	plasma	any	any	any	any						
+pa_plasma_p07	pa_plasma_p07	pa_plasma_p07	1	kerbal_a	flight.chatter	radio				0	Eh... ¿por qué está brillando la ventana?	Uh... why is the window glowing?	tense	chatter	both	any	plasma	any	any	any	any						
+pa_plasma_p08	pa_plasma_p08	pa_plasma_p08	1	kerbal_a	flight.chatter	radio				0	¡Oh, mira, nos hemos convertido en una estrella fugaz!	Oh look, we’ve become a shooting star!	tense	chatter	both	any	plasma	any	any	any	any						
+pa_plasma_p09	pa_plasma_p09	pa_plasma_p09	1	kerbal_a	flight.chatter	radio				0	Creo que la atmósfera está intentando cocinarnos.	I think the atmosphere is trying to cook the ship.	tense	chatter	both	any	plasma	any	any	any	any						
+pa_plasma_p10	pa_plasma_p10	pa_plasma_p10	1	kerbal_a	flight.chatter	radio				0	Por el lado bueno, no necesitamos calefacción en la cabina.	On the bright side, we don’t need cabin heating.	tense	chatter	both	any	plasma	any	any	any	any						
 pa_imp_t01	pa_imp_t01	pa_imp_t01	1	kerbal_a	flight.chatter	radio				0	Eso ha sido un buen golpe.	That was quite a jolt.	tense	chatter	both	any	impulse	any	any	any	any						
 pa_imp_t02_1	pa_imp_t02_1	pa_imp_t02	1	kerbal_a	flight.chatter	radio				0	Control, hemos notado un tirón.	Control, we felt a jolt.	tense	chatter	both	any	impulse	any	any	any	any						
 pa_imp_t02_2	pa_imp_t02_2	pa_imp_t02	2	mission_control	flight.chatter	radio				0	Recibido. Revisad si falta alguna pieza.	Copy. Check if any part is missing.	tense	chatter	m	any	impulse	any	any	any	any						
@@ -186,15 +191,15 @@ sr_002	sr_002	sr_002	1	mission_control	flight.chatter	radio				0	Torre despejada
 sr_002__v02	sr_002	sr_002	1	mission_control	flight.chatter	radio				0	Torre despejada. Buen viaje, {vessel}.	Tower clear. Good trip, {vessel}.	calm	chatter	m	launch	any	any	any	any	any						
 sr_003	sr_003	sr_003	1	kerbal_a	flight.chatter	radio				0	¡Nos vamos! ¡De verdad nos vamos!	We're going! We're really going!	calm	chatter	both	launch	any	any	any	any	any						
 sr_004	sr_004	sr_004	1	kerbal_a	flight.chatter	radio				0	Empuje bueno. Esto empuja mucho.	Good thrust. This pushes a lot.	calm	chatter	both	launch	any	any	any	any	any						
-sr_005_1	sr_005_1	sr_005	1	kerbal_a	flight.chatter	radio				0	Control, el cohete va hacia arriba. Como debe.	Control, the rocket is going up. As it should.	calm	chatter	both	launch	any	any	any	any	any						
+sr_005_1	sr_005_1	sr_005	1	kerbal_a	flight.chatter	radio			climb_ms>0	0	Control, el cohete va hacia arriba. Como debe.	Control, the rocket is going up. As it should.	calm	chatter	both	launch	any	any	any	any	any						
 sr_005_2	sr_005_2	sr_005	2	mission_control	flight.chatter	radio				0	Confirmado. Esa es la dirección buena.	Confirmed. That's the right direction.	calm	chatter	m	launch	any	any	any	any	any						
 sr_006_1	sr_006_1	sr_006	1	kerbal_a	flight.chatter	radio				0	Control, ¡qué ruido!	Control, what a noise!	calm	chatter	both	launch	any	any	any	any	any						
 sr_006_2	sr_006_2	sr_006	2	mission_control	flight.chatter	radio				0	Es el sonido del dinero. Seguid.	That's the sound of money. Carry on.	calm	chatter	m	launch	any	any	any	any	any						
 sr_007	sr_007	sr_007	1	mission_control	flight.chatter	radio				0	Todo nominal. Disfrutad del paseo.	All nominal. Enjoy the ride.	calm	chatter	m	launch	any	any	any	any	any						
 sr_008	sr_008	sr_008	1	kerbal_a	flight.chatter	radio				0	Subiendo. Todo en verde.	Climbing. All green.	calm	chatter	both	launch	any	any	any	any	any						
 sr_009	sr_009	sr_009	1	mission_control	flight.chatter	radio				0	Buena trayectoria. Seguid así.	Good trajectory. Keep it up.	calm	chatter	m	ascent	any	any	any	any	any						
-sr_010	sr_010	sr_010	1	mission_control	flight.chatter	radio				0	Altitud subiendo bien. Ni un susto.	Altitude rising nicely. Not a single scare.	calm	chatter	m	ascent	any	any	any	any	any						
-sr_011	sr_011	sr_011	1	mission_control	flight.chatter	radio				0	Ascenso limpio. Los ingenieros sonríen.	Clean ascent. The engineers are smiling.	calm	chatter	m	ascent	any	any	any	any	any						
+sr_010	sr_010	sr_010	1	mission_control	flight.chatter	radio			climb_ms>0	0	Altitud subiendo bien. Ni un susto.	Altitude rising nicely. Not a single scare.	calm	chatter	m	ascent	any	any	any	any	any						
+sr_011	sr_011	sr_011	1	mission_control	flight.chatter	radio			climb_ms>0	0	Ascenso limpio. Los ingenieros sonríen.	Clean ascent. The engineers are smiling.	calm	chatter	m	ascent	any	any	any	any	any						
 sr_012	sr_012	sr_012	1	kerbal_a	flight.chatter	radio				0	El cielo se pone oscuro. Qué bonito.	The sky is getting dark. How pretty.	calm	chatter	both	ascent	any	any	any	any	any						
 sr_013_1	sr_013_1	sr_013	1	kerbal_a	flight.chatter	radio				0	Control, ya casi no hay aire fuera.	Control, there's almost no air outside now.	calm	chatter	both	ascent	any	any	any	any	any						
 sr_013_2	sr_013_2	sr_013	2	mission_control	flight.chatter	radio				0	Correcto. No abráis la ventana.	Correct. Don't open the window.	calm	chatter	m	ascent	any	any	any	any	any						
@@ -385,3 +390,52 @@ tm_104	tm_104	tm_104	1	kerbal_a	flight.chatter	radio				0	Sin motor. Esto se pon
 tm_105	tm_105	tm_105	1	mission_control	flight.chatter	radio				0	Motor apagado. Calma, tenemos opciones.	Engine out. Calm, we have options.	tense	chatter	m	any	engine_out	any	any	any	any						
 tm_106_1	tm_106_1	tm_106	1	kerbal_a	flight.chatter	radio				0	Control, ¿alguien ha visto el motor? Ya no suena.	Control, has anyone seen the engine? It's not making noise anymore.	tense	chatter	both	any	engine_out	any	any	any	any						
 tm_106_2	tm_106_2	tm_106	2	mission_control	flight.chatter	radio				0	Comprobad el combustible y la etapa.	Check the fuel and the stage.	tense	chatter	m	any	engine_out	any	any	any	any						
+tn_any_01	tn_any_01	tn_any_01	1	kerbal_a	flight.chatter	radio				0	Esto no me gusta nada.	I don't like this at all.	tense	chatter	both	any	any	any	any	any	any						
+tn_any_02	tn_any_02	tn_any_02	1	kerbal_a	flight.chatter	radio				0	Control, algo no va del todo bien.	Control, something isn't quite right.	tense	chatter	both	any	any	any	any	any	any						
+tn_any_03	tn_any_03	tn_any_03	1	mission_control	flight.chatter	radio				0	Despacio. Revisad los indicadores uno a uno.	Slowly. Check the gauges one by one.	tense	chatter	m	any	any	any	any	any	any						
+tn_any_04	tn_any_04	tn_any_04	1	mission_control	flight.chatter	radio				0	No os precipitéis. Pensad antes de tocar nada.	Don't rush. Think before you touch anything.	tense	chatter	m	any	any	any	any	any	any						
+tn_any_05_1	tn_any_05_1	tn_any_05	1	kerbal_a	flight.chatter	radio				0	Control, ¿estáis viendo lo mismo que yo?	Control, are you seeing what I'm seeing?	tense	chatter	both	any	any	any	any	any	any						
+tn_any_05_2	tn_any_05_2	tn_any_05	2	mission_control	flight.chatter	radio				0	Lo vemos. Seguid con calma.	We see it. Carry on calmly.	tense	chatter	m	any	any	any	any	any	any						
+tn_spin_01	tn_spin_01	tn_spin_01	1	kerbal_a	flight.chatter	radio				0	Estamos girando más de lo que me gusta.	We're spinning more than I'd like.	tense	chatter	both	any	spin	any	any	any	any						
+tn_spin_02	tn_spin_02	tn_spin_02	1	kerbal_a	flight.chatter	radio				0	El horizonte no se queda quieto.	The horizon won't stay still.	tense	chatter	both	any	spin	any	any	any	any						
+tn_spin_03	tn_spin_03	tn_spin_03	1	mission_control	flight.chatter	radio				0	Os vemos girar. Usad el control de actitud.	We see you rotating. Use your attitude control.	tense	chatter	m	any	spin	any	any	any	any						
+tn_spin_04_1	tn_spin_04_1	tn_spin_04	1	kerbal_a	flight.chatter	radio				0	Control, la nave quiere dar vueltas.	Control, the ship wants to roll.	tense	chatter	both	any	spin	any	any	any	any						
+tn_spin_04_2	tn_spin_04_2	tn_spin_04	2	mission_control	flight.chatter	radio				0	Corregid con suavidad. Nada de golpes.	Correct gently. No sharp moves.	tense	chatter	m	any	spin	any	any	any	any						
+tn_gforce_01	tn_gforce_01	tn_gforce_01	1	kerbal_a	flight.chatter	radio				0	Me pesan los brazos. Mucho.	My arms feel heavy. Very.	tense	chatter	both	any	gforce	any	any	any	any						
+tn_gforce_02	tn_gforce_02	tn_gforce_02	1	kerbal_a	flight.chatter	radio				0	Esto aprieta. Me cuesta respirar.	This is squeezing. It's hard to breathe.	tense	chatter	both	any	gforce	any	any	any	any						
+tn_gforce_03	tn_gforce_03	tn_gforce_03	1	mission_control	flight.chatter	radio				0	Las fuerzas G suben. Aguantad un poco.	G forces are climbing. Hold on a little.	tense	chatter	m	any	gforce	any	any	any	any						
+tn_gforce_04_1	tn_gforce_04_1	tn_gforce_04	1	kerbal_a	flight.chatter	radio				0	Control, me estoy hundiendo en el asiento.	Control, I'm sinking into my seat.	tense	chatter	both	any	gforce	any	any	any	any						
+tn_gforce_04_2	tn_gforce_04_2	tn_gforce_04	2	mission_control	flight.chatter	radio				0	Normal. Respirad hondo y apretad.	Normal. Breathe deep and tense up.	tense	chatter	m	any	gforce	any	any	any	any						
+tn_q_01	tn_q_01	tn_q_01	1	kerbal_a	flight.chatter	radio				0	El aire golpea fuerte ahí fuera.	The air is hitting hard out there.	tense	chatter	both	any	q	any	any	any	any						
+tn_q_02	tn_q_02	tn_q_02	1	kerbal_a	flight.chatter	radio				0	Todo cruje. La presión es alta.	Everything is creaking. The pressure is high.	tense	chatter	both	any	q	any	any	any	any						
+tn_q_03	tn_q_03	tn_q_03	1	mission_control	flight.chatter	radio				0	Presión dinámica alta. Reducid si hace falta.	High dynamic pressure. Throttle back if needed.	tense	chatter	m	any	q	any	any	any	any						
+tn_q_04_1	tn_q_04_1	tn_q_04	1	kerbal_a	flight.chatter	radio				0	Control, la estructura se queja.	Control, the structure is complaining.	tense	chatter	both	any	q	any	any	any	any						
+tn_q_04_2	tn_q_04_2	tn_q_04	2	mission_control	flight.chatter	radio				0	Lo vemos. Aguantará. Seguid el perfil.	We see it. It'll hold. Stick to the profile.	tense	chatter	m	any	q	any	any	any	any						
+tn_ground_01	tn_ground_01	tn_ground_01	1	kerbal_a	flight.chatter	radio				0	El suelo viene rápido.	The ground is coming fast.	tense	chatter	both	any	ground	any	any	any	any						
+tn_ground_02	tn_ground_02	tn_ground_02	1	kerbal_a	flight.chatter	radio				0	Estamos bajando demasiado deprisa.	We're coming down too quickly.	tense	chatter	both	any	ground	any	any	any	any						
+tn_ground_03	tn_ground_03	tn_ground_03	1	mission_control	flight.chatter	radio				0	Velocidad de descenso alta. Frenad.	Descent rate is high. Slow down.	tense	chatter	m	any	ground	any	any	any	any						
+tn_ground_04_1	tn_ground_04_1	tn_ground_04	1	kerbal_a	flight.chatter	radio				0	Control, el suelo se acerca mucho.	Control, the ground is getting very close.	tense	chatter	both	any	ground	any	any	any	any						
+tn_ground_04_2	tn_ground_04_2	tn_ground_04	2	mission_control	flight.chatter	radio				0	Frenad ya. Tenéis margen, pero poco.	Slow down now. You have margin, but not much.	tense	chatter	m	any	ground	any	any	any	any						
+tn_heat_01	tn_heat_01	tn_heat_01	1	kerbal_a	flight.chatter	radio				0	Hace calor aquí. Mucho.	It's hot in here. Very.	tense	chatter	both	any	heat	any	any	any	any						
+tn_heat_02	tn_heat_02	tn_heat_02	1	kerbal_a	flight.chatter	radio				0	La temperatura de las piezas sube rápido.	The part temperatures are climbing fast.	tense	chatter	both	any	heat	any	any	any	any						
+tn_heat_03	tn_heat_03	tn_heat_03	1	mission_control	flight.chatter	radio				0	Temperaturas altas. Vigilad las piezas más expuestas.	High temperatures. Watch the most exposed parts.	tense	chatter	m	any	heat	any	any	any	any						
+tn_heat_04_1	tn_heat_04_1	tn_heat_04	1	kerbal_a	flight.chatter	radio				0	Control, algo se está calentando demasiado.	Control, something is getting too hot.	tense	chatter	both	any	heat	any	any	any	any						
+tn_heat_04_2	tn_heat_04_2	tn_heat_04	2	mission_control	flight.chatter	radio				0	Lo vemos. Reducid si podéis.	We see it. Ease off if you can.	tense	chatter	m	any	heat	any	any	any	any						
+tn_plasma_01	tn_plasma_01	tn_plasma_01	1	kerbal_a	flight.chatter	radio				0	La señal se corta. Es el plasma.	The signal is cutting out. It's the plasma.	tense	chatter	both	any	plasma	any	any	any	any						
+tn_plasma_02	tn_plasma_02	tn_plasma_02	1	kerbal_a	flight.chatter	radio				0	Todo brilla ahí fuera. No quiero mirar.	Everything is glowing out there. I don't want to look.	tense	chatter	both	any	plasma	any	any	any	any						
+tn_plasma_03	tn_plasma_03	tn_plasma_03	1	mission_control	flight.chatter	radio				0	Os perdemos a ratos. Es el plasma, aguantad.	We're losing you on and off. It's the plasma, hang on.	tense	chatter	m	any	plasma	any	any	any	any						
+tn_fuel_01	tn_fuel_01	tn_fuel_01	1	kerbal_a	flight.chatter	radio				0	El combustible baja más rápido de lo que pensaba.	Fuel is dropping faster than I thought.	tense	chatter	both	any	fuel	any	any	any	any						
+tn_fuel_02	tn_fuel_02	tn_fuel_02	1	kerbal_a	flight.chatter	radio				0	Vamos a necesitar cada gota.	We're going to need every drop.	tense	chatter	both	any	fuel	any	any	any	any						
+tn_fuel_03	tn_fuel_03	tn_fuel_03	1	mission_control	flight.chatter	radio				0	Combustible justo. Nada de maniobras extra.	Fuel is tight. No extra maneuvers.	tense	chatter	m	any	fuel	any	any	any	any						
+tn_fuel_04_1	tn_fuel_04_1	tn_fuel_04	1	kerbal_a	flight.chatter	radio				0	Control, el indicador de combustible me mira mal.	Control, the fuel gauge is giving me a look.	tense	chatter	both	any	fuel	any	any	any	any						
+tn_fuel_04_2	tn_fuel_04_2	tn_fuel_04	2	mission_control	flight.chatter	radio				0	Lo vemos. Optimizad cada encendido.	We see it. Make every burn count.	tense	chatter	m	any	fuel	any	any	any	any						
+tn_impulse_01	tn_impulse_01	tn_impulse_01	1	kerbal_a	flight.chatter	radio				0	Eso ha sonado fuerte.	That sounded loud.	tense	chatter	both	any	impulse	any	any	any	any						
+tn_impulse_02	tn_impulse_02	tn_impulse_02	1	kerbal_a	flight.chatter	radio				0	¿Qué ha sido ese golpe?	What was that bump?	tense	chatter	both	any	impulse	any	any	any	any						
+tn_impulse_03	tn_impulse_03	tn_impulse_03	1	mission_control	flight.chatter	radio				0	Vimos un pico en los sensores. ¿Todo bien?	We saw a spike on the sensors. Everything okay?	tense	chatter	m	any	impulse	any	any	any	any						
+tn_impulse_04_1	tn_impulse_04_1	tn_impulse_04	1	kerbal_a	flight.chatter	radio				0	Control, algo nos ha sacudido.	Control, something shook us.	tense	chatter	both	any	impulse	any	any	any	any						
+tn_impulse_04_2	tn_impulse_04_2	tn_impulse_04	2	mission_control	flight.chatter	radio				0	Revisad la nave. Decidnos si falta algo.	Check the ship. Tell us if anything is missing.	tense	chatter	m	any	impulse	any	any	any	any						
+tn_engine_out_01	tn_engine_out_01	tn_engine_out_01	1	kerbal_a	flight.chatter	radio				0	El motor se ha parado. No sé por qué.	The engine stopped. I don't know why.	tense	chatter	both	any	engine_out	any	any	any	any						
+tn_engine_out_02	tn_engine_out_02	tn_engine_out_02	1	kerbal_a	flight.chatter	radio				0	Sin empuje. Esto se pone feo.	No thrust. This is getting ugly.	tense	chatter	both	any	engine_out	any	any	any	any						
+tn_engine_out_03	tn_engine_out_03	tn_engine_out_03	1	mission_control	flight.chatter	radio				0	Perdimos el motor en los datos. Revisad el combustible.	We lost the engine in the data. Check the fuel.	tense	chatter	m	any	engine_out	any	any	any	any						
+tn_engine_out_04_1	tn_engine_out_04_1	tn_engine_out_04	1	kerbal_a	flight.chatter	radio				0	Control, el motor no responde.	Control, the engine isn't responding.	tense	chatter	both	any	engine_out	any	any	any	any						
+tn_engine_out_04_2	tn_engine_out_04_2	tn_engine_out_04	2	mission_control	flight.chatter	radio				0	Probad a encenderlo otra vez. Con calma.	Try lighting it again. Calmly.	tense	chatter	m	any	engine_out	any	any	any	any						
