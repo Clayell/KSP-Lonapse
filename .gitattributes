@@ -11,3 +11,6 @@ GameData/Lonapse/Phrases/pools.tsv linguist-generated
 *.ogg binary
 *.wav binary
 *.dll binary
+
+# Visual Studio expects CRLF in solution files
+*.sln text eol=crlf

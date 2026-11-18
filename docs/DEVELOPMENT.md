@@ -27,8 +27,17 @@ Each Crew and Probe category needs at least 200 distinct authored sentence templ
 Shared paired fragments live in `GameData/Lonapse/Phrases/choices.tsv` and load before the category tables.
 The validator checks their translations and variables as well as the category minimum.
 
+You need your own KSP 1.12 install, because the plugin compiles against the game's DLLs in `KSP_Data/Managed/`.
+Those can't be in the repo. The scripts are bash and need Mono (`mcs` and `mono`), Python 3 and `zip`. On Windows
+that means WSL or Git Bash with Mono. Module Manager, RasterPropMonitor and DeepFreeze are optional, only for testing
+the patches and the compat code.
+
 First tell the scripts where your KSP install is. You can set `KSP_DIR`, or write the path into a file called
 `.ksp_dir` in the repo root (one line, it stays out of git).
+
+`Lonapse.sln` and `Lonapse.csproj` are there for the editor (Visual Studio, Rider, VS Code or Codium with
+OmniSharp). The csproj finds the game the same way `build.sh` does. It gives you IntelliSense and a quick compile
+check, but it builds into `bin/` and installs nothing. The real build is `build.sh`.
 
 ```bash
 ./build.sh                                  # compile and install the DLL into your game
@@ -99,6 +108,14 @@ clips each folder has against its target, in red when it has too few.
 | `sfx/cabin_loop`, `sfx/cabin_power_down`, `sfx/cabin_rattle` | 1 each | cabin fans and hum in IVA, power down, and panel rattling under engine thrust |
 | `sfx/control_room_loop` | 1 | quiet room pickup mixed into the Mission Control mic before the radio filters |
 | `beeps/roger` | 1 | roger beep at the end of a crew transmission |
+| `beeps/master_alarm` | 1 | soft caution loop at high stress |
+| `beeps/probe_<core>_<mood>` | 3 each | probe beeps, one folder per stock core and mood (bored, curious, happy, offended, proud, scared, sleepy) |
+| `beeps/probe_data` | 3 | data stream beeps while an antenna sends science |
+| `sfx/cabin_separation` | 1 | metal clunk on separation stages in IVA |
+| `sfx/airlock_dock`, `sfx/airlock_undock`, `sfx/hatch_open`, `sfx/hatch_close` | 1 each | docking, undocking and EVA hatch |
+| `sfx/jetpack_on`, `sfx/jetpack_off`, `sfx/jetpack_loop` | 1 each | EVA jetpack |
+| `sfx/footstep`, `sfx/thud_heavy`, `sfx/thud_light`, `sfx/flag_plant` | 1 each | EVA steps, falls and planting a flag |
+| `sfx/soi_change` | 1 | entering another sphere of influence |
 
 Speech is generated in game from the alternative-row category tables and optional structural columns in `Phrases/Crew` and `Phrases/Probe`.
 Scene selectors in `when` preserve conversations, speaker roles, core/lineset targeting, and eligibility.
@@ -177,10 +194,10 @@ Click the antenna button on the toolbar in flight or map view. The window has ei
   reaction has its own toggle.
 - **Subtitles**: on or off, speaker name, colour per speaker, position, text size, background, number of lines and a
   preview.
+- **Mods** lists mods that supply dialogue, with a toggle for each one and tools to reload and test lines.
 - **Advanced**: landing and stage tones, voice boost, weak signal noise and dropouts, the signal mode (auto, off,
   fixed), the calm radio gap, the probe talk gap, how much a line should fit the speaker's job and character, the probe
   charge levels and beep pitch, and "Reset timing to defaults".
-- **Mods** lists mods that supply dialogue, with a toggle for each one and tools to reload and test lines.
 - **Debug**: the debug overlay, a test exchange, mouth and head turn calibration, a phrase test and the clip count per
   folder.
 

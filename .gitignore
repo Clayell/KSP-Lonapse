@@ -1,4 +1,6 @@
 build/
+bin/
+obj/
 audio/work/
 audio/build/
 audio/.venv/
