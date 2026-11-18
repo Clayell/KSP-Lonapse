@@ -1,8 +1,9 @@
 // Stock ApplicationLauncher button and the IMGUI settings window.
+using ClickThroughFix;
+using KSP.UI.Screens;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using KSP.UI.Screens;
 
 namespace Lonapse
 {
@@ -173,7 +174,7 @@ namespace Lonapse
                 lowStyle = new GUIStyle(GUI.skin.label);
                 lowStyle.normal.textColor = new Color(1f, 0.35f, 0.3f);
             }
-            Rect r = GUILayout.Window(WindowId, rect, DrawWindow, "Lonapse", GUILayout.Width(WindowWidth));
+            Rect r = ClickThruBlocker.GUILayoutWindow(WindowId, rect, DrawWindow, "Lonapse", GUILayout.Width(WindowWidth));
             if (pendingSave) { pendingSave = false; host.SaveSettings(); }
             r.x = Mathf.Clamp(r.x, 0f, Math.Max(0f, Screen.width - 60f));
             r.y = Mathf.Clamp(r.y, 0f, Math.Max(0f, Screen.height - 40f));

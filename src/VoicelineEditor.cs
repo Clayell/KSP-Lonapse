@@ -3,10 +3,11 @@
 // The preview asks the same Piper voices as a flight (RuntimeVoice.Shared, kept running by RuntimeVoiceHost) and
 // plays the clip on a VoiceChannel with the radio or intercom sound of a flight. It has no key clicks, no quindar
 // tones and no static bed, and a kerbal is not moved in pitch away from the rest of a crew.
+using ClickThroughFix;
+using KSP.UI.Screens;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using KSP.UI.Screens;
 
 namespace Lonapse
 {
@@ -363,7 +364,7 @@ namespace Lonapse
                 // a click outside the window ends the typing, so the editor gets its keys back
                 Event ev = Event.current;
                 if (typingLock && ev.type == EventType.MouseDown && !rect.Contains(ev.mousePosition)) GUIUtility.keyboardControl = 0;
-                Rect r = GUILayout.Window(WindowId, rect, DrawWindow, "Lonapse: Action Group Voicelines", GUILayout.Width(WindowWidth));
+                Rect r = ClickThruBlocker.GUILayoutWindow(WindowId, rect, DrawWindow, "Lonapse: Action Group Voicelines", GUILayout.Width(WindowWidth));
                 r.x = Mathf.Clamp(r.x, 0f, Math.Max(0f, Screen.width - 60f));
                 r.y = Mathf.Clamp(r.y, 0f, Math.Max(0f, Screen.height - 40f));
                 rect = r;
