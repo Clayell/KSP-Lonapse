@@ -60,7 +60,7 @@ with a text to speech voice and pitched up. It sounds like a real language witho
 1. Download `Lonapse-1.0.0.zip` from the releases page. The `GameData` folder in this repo has the same files, except the runtime voice (`PluginData/Runtime`), which is only in the zip.
 2. Copy the `GameData/Lonapse` folder into the `GameData` folder of your KSP install.
 
-That's all. Lonapse has no dependencies. The mod is available for install via the CKAN. Additionally, the mod is available on [SpaceDock](https://spacedock.info/mod/4786/Lonapse).
+That's all. Lonapse's only dependency is Module Manager, which you almost certainly have already. The mod is available for install via the CKAN. Additionally, the mod is available on [SpaceDock](https://spacedock.info/mod/4786/Lonapse).
 
 To update, delete the old `GameData/Lonapse` folder first, but keep `GameData/Lonapse/PluginData` if you want to keep
 your settings.
