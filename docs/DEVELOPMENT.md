@@ -29,7 +29,8 @@ The validator checks their translations and variables as well as the category mi
 
 You need your own KSP 1.12 install, because the plugin compiles against the game's DLLs in `KSP_Data/Managed/`.
 Those can't be in the repo. The scripts are bash and need Mono (`mcs` and `mono`), Python 3 and `zip`. On Windows
-that means WSL or Git Bash with Mono. Module Manager, RasterPropMonitor and DeepFreeze are optional, only for testing
+that means WSL or Git Bash with Mono. ClickThroughBlocker has to be installed in that game, because the plugin also
+compiles against its DLL in `GameData/000_ClickThroughBlocker/Plugins/`. Module Manager, RasterPropMonitor and DeepFreeze are optional, only for testing
 the patches and the compat code.
 
 First tell the scripts where your KSP install is. You can set `KSP_DIR`, or write the path into a file called

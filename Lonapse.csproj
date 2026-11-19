@@ -18,17 +18,18 @@
     <Compile Include="src/**/*.cs" />
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
   </ItemGroup>
-	<ItemDefinitionGroup>
-		<Reference>
-			<Private>False</Private>
-		</Reference>
-	</ItemDefinitionGroup>
+
+  <ItemDefinitionGroup>
+    <Reference>
+      <Private>False</Private>
+    </Reference>
+  </ItemDefinitionGroup>
 
   <ItemGroup>
     <Reference Include="$(Managed)/Assembly-CSharp.dll" />
     <Reference Include="$(Managed)/Assembly-CSharp-firstpass.dll" />
-	<Reference Include="$(KSP_DIR)/GameData/000_ClickThroughBlocker/Plugins/ClickThroughBlocker.dll" />
-	<Reference Include="$(Managed)/UnityEngine.dll" />
+    <Reference Include="$(KspDir)/GameData/000_ClickThroughBlocker/Plugins/ClickThroughBlocker.dll" />
+    <Reference Include="$(Managed)/UnityEngine.dll" />
     <Reference Include="$(Managed)/UnityEngine.CoreModule.dll" />
     <Reference Include="$(Managed)/UnityEngine.AudioModule.dll" />
     <Reference Include="$(Managed)/UnityEngine.IMGUIModule.dll" />

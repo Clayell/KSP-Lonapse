@@ -41,6 +41,14 @@ for a in Assembly-CSharp Assembly-CSharp-firstpass UnityEngine UnityEngine.CoreM
   refs+=("-r:$MG/$a.dll")
 done
 
+# the windows draw through ClickThroughBlocker, so it has to be installed in the game
+CTB="$KSP_DIR/GameData/000_ClickThroughBlocker/Plugins/ClickThroughBlocker.dll"
+if [[ ! -f "$CTB" ]]; then
+  echo "ERROR: ClickThroughBlocker.dll not found: $CTB (install ClickThroughBlocker)" >&2
+  exit 1
+fi
+refs+=("-r:$CTB")
+
 mkdir -p "$REPO/build"
 OUT="$REPO/build/Lonapse.dll"
 shopt -s nullglob
